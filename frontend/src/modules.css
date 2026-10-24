@@ -1,0 +1,26 @@
+/* Módulos administrativos. Identidad Blenkir: azul marino y naranja. */
+.sidebar { width: 268px; min-width: 268px; overflow-y: auto; scrollbar-width: thin; }
+.sidebar nav { padding-bottom: 10px; }
+.sidebar nav a { flex-shrink: 0; }
+.sidebar .school-box { margin-top: 24px; flex-shrink: 0; }
+.notice-grid, .export-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.notice-body { white-space: pre-wrap; line-height: 1.6; font-size: 14px; }
+.search-input { max-width: 290px; }
+.form-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.export-icon { display: block; font-size: 38px; color: var(--orange); margin-bottom: 14px; }
+.export-grid .panel { display: flex; flex-direction: column; align-items: flex-start; }
+.export-grid .panel p { flex-grow: 1; }
+.table-responsive { max-width: 100%; overflow-x: auto; }
+.table .form-select { min-width: 180px; }
+.alert i { margin-right: 6px; }
+@media (max-width: 780px) {
+  .sidebar { width: 76px; min-width: 76px; }
+  .sidebar nav a { font-size: 0; }
+  .sidebar nav a i { font-size: 20px; }
+  .form-grid.two { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .search-input { max-width: 100%; }
+  .metric-card strong { font-size: 19px; }
+  .page-head .period-chip { align-self: flex-start; }
+}
