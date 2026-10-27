@@ -53,7 +53,7 @@ export class ApiService{
   createCompetency(x:any){return this.http.post<any>(`${this.base}/competencies`,x);}
   competencyResults(){return this.http.get<any[]>(`${this.base}/competencies/results`);}
   saveCompetencyResult(x:any){return this.http.post<any>(`${this.base}/competencies/results`,x);}
-  downloadExport(path:'students'|'enrollments'|'competencies'){
-    return this.http.get(`${this.base}/exports/siagie/${path}.csv`,{responseType:'blob'});
+  downloadExport(path:'students'|'enrollments'|'competencies',format:'csv'|'xlsx'='csv'){
+    return this.http.get(`${this.base}/exports/siagie/${path}.${format}`,{responseType:'blob'});
   }
 }

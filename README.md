@@ -1,6 +1,6 @@
-# SSACB Blenkir — Plataforma escolar ampliada con módulos tipo SIGA UC
+# SSACB Blenkir — Plataforma escolar ampliada con nuevos modulos.
 
-Version nueva de blenkir actualizada con ramas y commits   .
+Version nueva de blenkir actualizada con ramas y commits.
 
 ## Tecnología solicitada
 

@@ -5,7 +5,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/blenkir_ssacb}
     username: ${DB_USERNAME:blenkir_app}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:blenkir_dev_2026}
 
   jpa:
     hibernate:
@@ -21,7 +21,7 @@ app:
     enabled: false
   jwt:
     # Cambiar en producción. Debe ser Base64 y de al menos 256 bits.
-    secret: ${JWT_SECRET}
+    secret: ${JWT_SECRET:VGhpcyIsIGEgdmVyeSBzZWN1cmUgYW5kIGxvbmcgYmFzZTY0IHNlY3JldCBrZXkgZm9yIGp3ZCBhdXRoZW50aWNhdGlvbiEhIQ==}
     expiration-ms: ${JWT_EXPIRATION_MS:28800000}
   cors:
     allowed-origin: ${FRONTEND_ORIGIN:http://localhost:4200}
