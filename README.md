@@ -1,6 +1,6 @@
 # SSACB Blenkir — Plataforma escolar ampliada con módulos tipo SIGA UC
 
-Esta edición **amplía Blenkir** tomando como referencia las funciones de SIGA UC, conservando el proyecto original, el logo, la fotografía del colegio, el azul marino y naranja y las tecnologías de Blenkir. El prototipo se conserva en `legacy-prototype/`. No contiene módulos QR ni código del backend Express de SIGA.
+Version nueva de blenkir actualizada con ramas y commits   .
 
 ## Tecnología solicitada
 
