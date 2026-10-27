@@ -1,6 +1,4 @@
--- Colegio Blenkir: ampliación inspirada en SIGA UC, sin módulo QR.
--- Ejecutar sobre blenkir_ssacb DESPUÉS del esquema original de SSACB.
--- No copia alumnos, DNIs ni cuentas de SIGA UC. PostgreSQL 16+.
+
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS personal_colegio (
