@@ -39,5 +39,14 @@ public class CourseController {
     }
 
     @PostMapping("/{courseId}/enroll/{studentId}") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public void enroll(@PathVariable Long courseId,@PathVariable Long studentId){var c=courses.findById(courseId).orElseThrow();var s=students.findById(studentId).orElseThrow();var e=enrollments.findByStudent_IdAndCourse_Id(studentId,courseId).orElse(Enrollment.builder().course(c).student(s).build());e.setActivo(true);enrollments.save(e);}
+    public void enroll(@PathVariable Long courseId,@PathVariable Long studentId){
+        var c=courses.findById(courseId).orElseThrow();
+        var s=students.findById(studentId).orElseThrow();
+        if(!c.isActivo()||!s.isActivo())throw new IllegalArgumentException("Estudiante o curso inactivo");
+        if(!Objects.equals(s.getGrado(),c.getGrado())||!Objects.equals(s.getSeccion(),c.getSeccion()))
+            throw new IllegalArgumentException("El grado y sección del estudiante deben coincidir con el curso");
+        var e=enrollments.findByStudent_IdAndCourse_Id(studentId,courseId).orElse(Enrollment.builder().course(c).student(s).build());
+        e.setActivo(true);
+        enrollments.save(e);
+    }
 }
