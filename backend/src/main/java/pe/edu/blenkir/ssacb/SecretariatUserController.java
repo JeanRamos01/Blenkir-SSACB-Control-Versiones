@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/secretariat-users")
@@ -29,14 +30,16 @@ public class SecretariatUserController {
     @PostMapping @Transactional
     public UserDto create(@Valid @RequestBody UserRequest r,Authentication a){
         if(users.findByUsername(r.username()).isPresent())throw new IllegalArgumentException("El usuario ya existe");
-        var saved=users.save(UserAccount.builder().username(r.username()).displayName(r.displayName())
+        var account=Objects.requireNonNull(UserAccount.builder().username(r.username()).displayName(r.displayName())
           .passwordHash(encoder.encode(r.password())).role(Role.SECRETARIA).build());
+        var saved=users.save(account);
         audit.log(a.getName(),"CREAR","USUARIO_SECRETARIA",saved.getId());return dto(saved);
     }
 
     @PatchMapping("/{id}/status") @Transactional
     public UserDto status(@PathVariable Long id,@RequestParam boolean active,Authentication a){
-        var user=users.findById(id).orElseThrow(()->new IllegalArgumentException("Usuario no encontrado"));
+        var user=users.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Usuario no encontrado"));
         if(user.getRole()!=Role.SECRETARIA)throw new IllegalArgumentException("Solo se pueden gestionar usuarios de Secretaría aquí");
         user.setActivo(active);audit.log(a.getName(),active?"ACTIVAR":"DESACTIVAR","USUARIO_SECRETARIA",id);
         return dto(users.save(user));

@@ -40,22 +40,28 @@ public class CompetencyController {
     public List<CompetencyDto> list(Authentication a){
         if(a.getAuthorities().stream().anyMatch(x->x.getAuthority().equals("ROLE_DOCENTE"))){
             var t=teachers.findByUser_Username(a.getName()).orElseThrow();
-            var ids=courses.findByTeacher_IdAndActivoTrue(t.getId()).stream().map(Course::getId).toList();
+            var ids=courses.findByTeacher_IdAndActivoTrue(t.getId()).stream()
+                    .map(course->Objects.requireNonNull(course).getId()).toList();
             return competencies.findAll().stream().filter(c->ids.contains(c.getCourse().getId())).map(CompetencyController::dto).toList();
         }
         return competencies.findAll().stream().map(CompetencyController::dto).toList();
     }
     @PostMapping @Transactional
     public CompetencyDto create(@Valid @RequestBody CompetencyInput r,Authentication a){
-        var course=courses.findById(r.cursoId()).orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));allowed(course,a);
-        var c=competencies.save(Competency.builder().course(course).nombre(r.nombre()).descripcion(r.descripcion()).build());
+        var course=courses.findById(Objects.requireNonNull(r.cursoId()))
+                .orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
+        allowed(course,a);
+        var competency=Objects.requireNonNull(Competency.builder().course(course).nombre(r.nombre())
+                .descripcion(r.descripcion()).build());
+        var c=competencies.save(competency);
         audit.log(a.getName(),"CREAR","COMPETENCIA",c.getId());return dto(c);
     }
     @GetMapping("/results") @Transactional(readOnly=true)
     public List<ResultDto> results(Authentication a){
         if(a.getAuthorities().stream().anyMatch(x->x.getAuthority().equals("ROLE_DOCENTE"))){
             var t=teachers.findByUser_Username(a.getName()).orElseThrow();
-            var ids=courses.findByTeacher_IdAndActivoTrue(t.getId()).stream().map(Course::getId).toList();
+            var ids=courses.findByTeacher_IdAndActivoTrue(t.getId()).stream()
+                    .map(course->Objects.requireNonNull(course).getId()).toList();
             return results.findAll().stream().filter(r->ids.contains(r.getCompetency().getCourse().getId())).map(CompetencyController::dto).toList();
         }
         return results.findAll().stream().map(CompetencyController::dto).toList();
@@ -63,9 +69,13 @@ public class CompetencyController {
     @PostMapping("/results") @Transactional
     public ResultDto save(@Valid @RequestBody ResultInput r,Authentication a){
         if(!Set.of("AD","A","B","C").contains(r.nivel()))throw new IllegalArgumentException("El nivel debe ser AD, A, B o C");
-        var c=competencies.findById(r.competenciaId()).orElseThrow(()->new IllegalArgumentException("Competencia no encontrada"));allowed(c.getCourse(),a);
-        var s=students.findById(r.estudianteId()).orElseThrow(()->new IllegalArgumentException("Estudiante no encontrado"));
-        if(enrollments.findByStudent_IdAndCourse_Id(s.getId(),c.getCourse().getId()).filter(Enrollment::isActivo).isEmpty())
+        var c=competencies.findById(Objects.requireNonNull(r.competenciaId()))
+                .orElseThrow(()->new IllegalArgumentException("Competencia no encontrada"));
+        allowed(c.getCourse(),a);
+        var s=students.findById(Objects.requireNonNull(r.estudianteId()))
+                .orElseThrow(()->new IllegalArgumentException("Estudiante no encontrado"));
+        if(enrollments.findByStudent_IdAndCourse_Id(s.getId(),c.getCourse().getId())
+                .filter(enrollment->Objects.requireNonNull(enrollment).isActivo()).isEmpty())
             throw new IllegalArgumentException("Estudiante no matriculado en el curso");
         var result=results.findByCompetency_IdAndStudent_IdAndPeriodo(c.getId(),s.getId(),r.periodo()).orElse(CompetencyResult.builder().competency(c).student(s).periodo(r.periodo()).build());
         result.setNivel(r.nivel());result.setConclusion(r.conclusion());var saved=results.save(result);

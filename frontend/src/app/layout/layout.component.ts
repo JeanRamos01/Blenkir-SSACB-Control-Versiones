@@ -14,23 +14,29 @@ import { AuthService } from '../core/auth.service';
        <ng-container [ngSwitch]="auth.role">
          <ng-container *ngSwitchCase="'ADMINISTRADOR'">
            <a routerLink="/students" routerLinkActive="active"><i class="bi bi-people"></i> Estudiantes</a>
-           <a routerLink="/teachers" routerLinkActive="active"><i class="bi bi-person-workspace"></i> Docentes</a>
            <a routerLink="/courses" routerLinkActive="active"><i class="bi bi-mortarboard"></i> Académico</a>
-           <a routerLink="/enrollments" routerLinkActive="active"><i class="bi bi-journal-check"></i> Matrículas</a>
-           <a routerLink="/curriculum" routerLinkActive="active"><i class="bi bi-diagram-3"></i> Carga curricular</a>
-           <a routerLink="/schedules" routerLinkActive="active"><i class="bi bi-clock-history"></i> Horarios</a>
-           <a routerLink="/guardians" routerLinkActive="active"><i class="bi bi-person-hearts"></i> Apoderados</a>
-           <a routerLink="/evaluations" routerLinkActive="active"><i class="bi bi-clipboard2-check"></i> Evaluaciones</a>
-           <a routerLink="/grades" routerLinkActive="active"><i class="bi bi-star"></i> Calificaciones</a>
-           <a routerLink="/competencies" routerLinkActive="active"><i class="bi bi-award"></i> Competencias</a>
-           <a routerLink="/student-records" routerLinkActive="active"><i class="bi bi-file-person"></i> Ficha del estudiante</a>
            <a routerLink="/attendance" routerLinkActive="active"><i class="bi bi-calendar-check"></i> Asistencia</a>
+           <a routerLink="/evaluations" routerLinkActive="active"><i class="bi bi-clipboard2-check"></i> Evaluaciones</a>
            <a routerLink="/reports" routerLinkActive="active"><i class="bi bi-bar-chart"></i> Reportes</a>
+           <a routerLink="/notifications" routerLinkActive="active"><i class="bi bi-megaphone"></i> Comunicados</a>
            <a routerLink="/staff" routerLinkActive="active"><i class="bi bi-person-badge"></i> Personal</a>
-           <a routerLink="/treasury" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Tesorería</a>
-           <a routerLink="/cash" routerLinkActive="active"><i class="bi bi-wallet2"></i> Caja</a>
-           <a routerLink="/siagie" routerLinkActive="active"><i class="bi bi-file-earmark-arrow-down"></i> SIAGIE / CSV</a>
-           <a routerLink="/audit" routerLinkActive="active"><i class="bi bi-shield-check"></i> Auditoría</a>
+           <details class="more-options">
+             <summary><i class="bi bi-three-dots"></i><span>Más opciones</span><i class="bi bi-chevron-down more-options-chevron"></i></summary>
+             <div class="more-options-menu">
+               <a routerLink="/teachers" routerLinkActive="active"><i class="bi bi-person-workspace"></i> Docentes</a>
+               <a routerLink="/enrollments" routerLinkActive="active"><i class="bi bi-journal-check"></i> Matrículas</a>
+               <a routerLink="/curriculum" routerLinkActive="active"><i class="bi bi-diagram-3"></i> Carga curricular</a>
+               <a routerLink="/schedules" routerLinkActive="active"><i class="bi bi-clock-history"></i> Horarios</a>
+               <a routerLink="/guardians" routerLinkActive="active"><i class="bi bi-person-hearts"></i> Apoderados</a>
+               <a routerLink="/grades" routerLinkActive="active"><i class="bi bi-star"></i> Calificaciones</a>
+               <a routerLink="/competencies" routerLinkActive="active"><i class="bi bi-award"></i> Competencias</a>
+               <a routerLink="/student-records" routerLinkActive="active"><i class="bi bi-file-person"></i> Ficha del estudiante</a>
+               <a routerLink="/treasury" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Tesorería</a>
+               <a routerLink="/cash" routerLinkActive="active"><i class="bi bi-wallet2"></i> Caja</a>
+               <a routerLink="/siagie" routerLinkActive="active"><i class="bi bi-file-earmark-arrow-down"></i> SIAGIE / CSV</a>
+               <a routerLink="/audit" routerLinkActive="active"><i class="bi bi-shield-check"></i> Auditoría</a>
+             </div>
+           </details>
          </ng-container>
          <ng-container *ngSwitchCase="'SECRETARIA'">
            <a routerLink="/enrollments" routerLinkActive="active"><i class="bi bi-journal-check"></i> Padrón / Matrículas</a>
@@ -50,10 +56,10 @@ import { AuthService } from '../core/auth.service';
            <a routerLink="/reports" routerLinkActive="active"><i class="bi bi-bar-chart"></i> Reportes</a>
          </ng-container>
          <ng-container *ngSwitchCase="'ESTUDIANTE'">
-           <a routerLink="/student" routerLinkActive="active"><i class="bi bi-person"></i> Mi perfil</a>
-           <a routerLink="/student" routerLinkActive="active"><i class="bi bi-book"></i> Mis cursos</a>
-           <a routerLink="/student" routerLinkActive="active"><i class="bi bi-star"></i> Mis calificaciones</a>
-           <a routerLink="/student" routerLinkActive="active"><i class="bi bi-calendar-check"></i> Mi asistencia</a>
+           <a routerLink="/student/profile" routerLinkActive="active"><i class="bi bi-person"></i> Mi perfil</a>
+           <a routerLink="/student/courses" routerLinkActive="active"><i class="bi bi-book"></i> Mis cursos</a>
+           <a routerLink="/student/grades" routerLinkActive="active"><i class="bi bi-star"></i> Mis calificaciones</a>
+           <a routerLink="/student/attendance" routerLinkActive="active"><i class="bi bi-calendar-check"></i> Mi asistencia</a>
            <a routerLink="/schedules" routerLinkActive="active"><i class="bi bi-clock-history"></i> Mi horario</a>
          </ng-container>
          <ng-container *ngSwitchCase="'APODERADO'">
@@ -62,7 +68,7 @@ import { AuthService } from '../core/auth.service';
            <a routerLink="/guardian" routerLinkActive="active"><i class="bi bi-calendar-check"></i> Asistencia</a>
          </ng-container>
        </ng-container>
-       <a routerLink="/notifications" routerLinkActive="active"><i class="bi bi-megaphone"></i> Comunicados</a>
+       <a *ngIf="auth.role !== 'ADMINISTRADOR'" routerLink="/notifications" routerLinkActive="active"><i class="bi bi-megaphone"></i> Comunicados</a>
      </nav>
      <div class="school-box"><i class="bi bi-building"></i><div><b>Colegio Blenkir</b><small>Año Escolar 2026</small></div></div>
    </aside>

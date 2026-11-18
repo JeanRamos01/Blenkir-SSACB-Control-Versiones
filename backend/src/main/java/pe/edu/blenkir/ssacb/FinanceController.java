@@ -46,7 +46,8 @@ public class FinanceController {
 
     @PostMapping("/concepts") @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
     public ConceptDto createConcept(@Valid @RequestBody ConceptInput r,Authentication auth){
-        var c=concepts.save(PaymentConcept.builder().nombre(r.nombre().trim()).importe(r.importe()).build());
+        var c=concepts.save(Objects.requireNonNull(
+                PaymentConcept.builder().nombre(r.nombre().trim()).importe(r.importe()).build()));
         audit.log(auth.getName(),"CREAR","CONCEPTO_COBRO",c.getId());return dto(c);
     }
 
@@ -55,11 +56,14 @@ public class FinanceController {
 
     @PostMapping("/charges") @Transactional
     public ChargeDto createCharge(@Valid @RequestBody ChargeInput r,Authentication auth){
-        var s=students.findById(r.estudianteId()).orElseThrow(()->new IllegalArgumentException("Estudiante no encontrado"));
-        var c=concepts.findById(r.conceptoId()).orElseThrow(()->new IllegalArgumentException("Concepto no encontrado"));
+        var s=students.findById(Objects.requireNonNull(r.estudianteId()))
+                .orElseThrow(()->new IllegalArgumentException("Estudiante no encontrado"));
+        var c=concepts.findById(Objects.requireNonNull(r.conceptoId()))
+                .orElseThrow(()->new IllegalArgumentException("Concepto no encontrado"));
         if(!s.isActivo()||!c.isActivo())throw new IllegalArgumentException("Estudiante o concepto inactivo");
-        var charge=charges.save(StudentCharge.builder().student(s).concept(c).importe(c.getImporte())
-            .pagado(BigDecimal.ZERO).periodo(r.periodo()).vencimiento(r.vencimiento()).build());
+        var charge=charges.save(Objects.requireNonNull(StudentCharge.builder().student(s).concept(c)
+            .importe(c.getImporte()).pagado(BigDecimal.ZERO).periodo(r.periodo())
+            .vencimiento(r.vencimiento()).build()));
         audit.log(auth.getName(),"CREAR","CUENTA_COBRO",charge.getId());return dto(charge);
     }
 
@@ -73,10 +77,12 @@ public class FinanceController {
         if(amount.compareTo(charge.getImporte().subtract(charge.getPagado()))>0)throw new IllegalArgumentException("El pago supera el saldo pendiente");
         if(!Set.of("EFECTIVO","TRANSFERENCIA","TARJETA","YAPE","PLIN").contains(r.medio()))throw new IllegalArgumentException("Medio de pago inválido");
         charge.setPagado(charge.getPagado().add(amount));charges.save(charge);
-        var payment=payments.save(StudentPayment.builder().charge(charge).importe(amount).medio(r.medio()).
-             referencia(r.referencia()).registradoPor(auth.getName()).fecha(LocalDateTime.now()).build());
-        cash.save(CashEntry.builder().fecha(payment.getFecha()).tipo("INGRESO").concepto("Cobro "+charge.getConcept().getNombre()).
-             importe(amount).usuario(auth.getName()).payment(payment).build());
+        var payment=payments.save(Objects.requireNonNull(StudentPayment.builder().charge(charge)
+             .importe(amount).medio(r.medio()).referencia(r.referencia()).registradoPor(auth.getName())
+             .fecha(LocalDateTime.now()).build()));
+        cash.save(Objects.requireNonNull(CashEntry.builder().fecha(payment.getFecha()).tipo("INGRESO")
+             .concepto("Cobro "+charge.getConcept().getNombre()).importe(amount).usuario(auth.getName())
+             .payment(payment).build()));
         audit.log(auth.getName(),"REGISTRAR_PAGO","PAGO",payment.getId());return dto(payment);
     }
 
@@ -84,14 +90,16 @@ public class FinanceController {
     public CashSummary cash(){
         var all=cash.findAll();var income=BigDecimal.ZERO;var expense=BigDecimal.ZERO;
         for(var c:all){if(c.getTipo().equals("INGRESO"))income=income.add(c.getImporte());else expense=expense.add(c.getImporte());}
-        return new CashSummary(income,expense,income.subtract(expense),all.stream().sorted(Comparator.comparing(CashEntry::getFecha).reversed()).map(FinanceController::dto).toList());
+        return new CashSummary(income,expense,income.subtract(expense),all.stream()
+                .sorted(Comparator.comparing((CashEntry entry)->Objects.requireNonNull(entry).getFecha()).reversed())
+                .map(FinanceController::dto).toList());
     }
 
     @PostMapping("/cash") @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
     public CashDto manualEntry(@Valid @RequestBody CashInput r,Authentication auth){
         if(!Set.of("INGRESO","EGRESO").contains(r.tipo()))throw new IllegalArgumentException("Tipo de movimiento inválido");
-        var entry=cash.save(CashEntry.builder().tipo(r.tipo()).concepto(r.concepto()).importe(r.importe()).
-               fecha(LocalDateTime.now()).usuario(auth.getName()).build());
+        var entry=cash.save(Objects.requireNonNull(CashEntry.builder().tipo(r.tipo()).concepto(r.concepto())
+               .importe(r.importe()).fecha(LocalDateTime.now()).usuario(auth.getName()).build()));
         audit.log(auth.getName(),"REGISTRAR_MOVIMIENTO","CAJA",entry.getId());return dto(entry);
     }
 }

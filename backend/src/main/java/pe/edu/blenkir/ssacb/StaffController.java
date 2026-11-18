@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/staff")
@@ -26,14 +27,16 @@ public class StaffController {
 
     @PostMapping @Transactional
     public StaffDto create(@Valid @RequestBody StaffRequest r,Authentication a){
-        var s=staff.save(SchoolStaff.builder().dni(r.dni()).nombreCompleto(r.nombreCompleto())
+        var newStaff=Objects.requireNonNull(SchoolStaff.builder().dni(r.dni()).nombreCompleto(r.nombreCompleto())
            .cargo(r.cargo()).correo(r.correo()).telefono(r.telefono()).activo(true).build());
+        var s=staff.save(newStaff);
         audit.log(a.getName(),"CREAR","PERSONAL",s.getId());return dto(s);
     }
 
     @PutMapping("/{id}") @Transactional
     public StaffDto update(@PathVariable Long id,@Valid @RequestBody StaffRequest r,Authentication a){
-        var s=staff.findById(id).orElseThrow(()->new IllegalArgumentException("Personal no encontrado"));
+        var s=staff.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Personal no encontrado"));
         s.setDni(r.dni());s.setNombreCompleto(r.nombreCompleto());s.setCargo(r.cargo());
         s.setCorreo(r.correo());s.setTelefono(r.telefono());s.setActivo(r.activo());
         audit.log(a.getName(),"ACTUALIZAR","PERSONAL",id);return dto(staff.save(s));

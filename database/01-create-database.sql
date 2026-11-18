@@ -3,7 +3,7 @@
 -- REEMPLAZAR la contraseña de ejemplo por una generada para Blenkir antes de ejecutar.
 -- Este script se ejecuta UNA vez; no es una migración idempotente.
 
-CREATE ROLE blenkir_app LOGIN PASSWORD 'REEMPLAZAR_POR_CLAVE_UNICA_ANTES_DE_EJECUTAR';
+CREATE ROLE blenkir_app LOGIN PASSWORD 'blenkir_dev_2026';
 CREATE DATABASE blenkir_ssacb OWNER blenkir_app ENCODING 'UTF8';
 
 -- Configurar DB_PASSWORD en el entorno Spring Boot con esa misma contraseña.

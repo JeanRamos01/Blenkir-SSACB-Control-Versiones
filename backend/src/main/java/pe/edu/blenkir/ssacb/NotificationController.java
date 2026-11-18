@@ -28,8 +28,10 @@ public class NotificationController {
     public NotificationDto create(@Valid @RequestBody SaveNotification r,Authentication auth){
         if(!r.rolDestino().equals("TODOS") && Arrays.stream(Role.values()).noneMatch(role->role.name().equals(r.rolDestino())))
             throw new IllegalArgumentException("Destinatario inválido");
-        var n=notifications.save(SchoolNotification.builder().titulo(r.titulo()).mensaje(r.mensaje())
-          .rolDestino(r.rolDestino()).fecha(LocalDateTime.now()).autor(auth.getName()).build());
+        var notification=Objects.requireNonNull(SchoolNotification.builder().titulo(r.titulo())
+                .mensaje(r.mensaje()).rolDestino(r.rolDestino()).fecha(LocalDateTime.now())
+                .autor(auth.getName()).build());
+        var n=notifications.save(notification);
         audit.log(auth.getName(),"CREAR","COMUNICADO",n.getId());return dto(n);
     }
 }

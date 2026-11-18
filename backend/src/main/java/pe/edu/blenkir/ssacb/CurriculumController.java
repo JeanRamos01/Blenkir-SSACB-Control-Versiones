@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/curriculum")
@@ -19,8 +20,12 @@ public class CurriculumController {
     public List<CourseController.CourseDto> list(){return courses.findAll().stream().map(CourseController::dto).toList();}
     @PutMapping("/assignment") @Transactional
     public CourseController.CourseDto assign(@Valid @RequestBody Assignment r,Authentication auth){
-        var course=courses.findById(r.cursoId()).orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
-        course.setTeacher(r.docenteId()==null?null:teachers.findById(r.docenteId()).orElseThrow(()->new IllegalArgumentException("Docente no encontrado")));
+        var course=courses.findById(Objects.requireNonNull(r.cursoId()))
+                .orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
+        Long teacherId=r.docenteId();
+        var teacher=teacherId==null?null:teachers.findById(Objects.requireNonNull(teacherId))
+                .orElseThrow(()->new IllegalArgumentException("Docente no encontrado"));
+        course.setTeacher(teacher);
         audit.log(auth.getName(),"ASIGNAR_DOCENTE","CURSO",course.getId());return CourseController.dto(courses.save(course));
     }
 }

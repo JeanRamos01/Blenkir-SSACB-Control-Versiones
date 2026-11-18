@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/enrollments")
@@ -19,8 +20,10 @@ public class EnrollmentController {
     public List<EnrollmentDto> list(){return enrollments.findAll().stream().map(EnrollmentController::dto).toList();}
     @PostMapping @Transactional
     public EnrollmentDto enroll(@RequestParam Long studentId,@RequestParam Long courseId,Authentication auth){
-        var student=students.findById(studentId).orElseThrow(()->new IllegalArgumentException("Estudiante no encontrado"));
-        var course=courses.findById(courseId).orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
+        var student=students.findById(Objects.requireNonNull(studentId))
+                .orElseThrow(()->new IllegalArgumentException("Estudiante no encontrado"));
+        var course=courses.findById(Objects.requireNonNull(courseId))
+                .orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
         if(!student.isActivo()||!course.isActivo())throw new IllegalArgumentException("Estudiante o curso inactivo");
         if(!java.util.Objects.equals(student.getGrado(),course.getGrado()) || !java.util.Objects.equals(student.getSeccion(),course.getSeccion()))
             throw new IllegalArgumentException("El grado y sección del estudiante deben coincidir con el curso");
@@ -29,7 +32,8 @@ public class EnrollmentController {
     }
     @PatchMapping("/{id}/status") @Transactional
     public EnrollmentDto status(@PathVariable Long id,@RequestParam boolean active,Authentication auth){
-        var e=enrollments.findById(id).orElseThrow(()->new IllegalArgumentException("Matrícula no encontrada"));
+        var e=enrollments.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Matrícula no encontrada"));
         e.setActivo(active);audit.log(auth.getName(),active?"REACTIVAR":"DESACTIVAR","MATRICULA",id);
         return dto(enrollments.save(e));
     }

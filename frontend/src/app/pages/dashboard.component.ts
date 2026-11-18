@@ -19,7 +19,7 @@ import { AuthService } from '../core/auth.service';
    <a *ngIf="auth.role==='ADMINISTRADOR'||auth.role==='SECRETARIA'" routerLink="/treasury"><i class="bi bi-cash-stack"></i> Ir a tesorería</a>
    <a *ngIf="auth.role==='DOCENTE'" routerLink="/attendance"><i class="bi bi-calendar-check"></i> Registrar asistencia</a>
    <a *ngIf="auth.role==='DOCENTE'" routerLink="/grades"><i class="bi bi-star"></i> Registrar calificaciones</a>
-   <a *ngIf="auth.role==='ESTUDIANTE'" routerLink="/student"><i class="bi bi-book"></i> Ver mis notas</a>
+   <a *ngIf="auth.role==='ESTUDIANTE'" routerLink="/student/grades"><i class="bi bi-book"></i> Ver mis notas</a>
    <a *ngIf="auth.role==='ESTUDIANTE'" routerLink="/schedules"><i class="bi bi-clock-history"></i> Mi horario</a>
    <a *ngIf="auth.role==='APODERADO'" routerLink="/guardian"><i class="bi bi-search"></i> Consultar a mi hijo</a>
    <a routerLink="/notifications"><i class="bi bi-megaphone"></i> Ver comunicados</a>

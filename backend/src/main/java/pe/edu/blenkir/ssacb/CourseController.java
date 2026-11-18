@@ -25,19 +25,38 @@ public class CourseController {
     }
 
     @PostMapping @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public CourseDto create(@Valid @RequestBody SaveCourse x){var t=x.docenteId()==null?null:teachers.findById(x.docenteId()).orElseThrow(()->new IllegalArgumentException("Docente no encontrado"));return dto(courses.save(Course.builder().codigo(x.codigo()).nombre(x.nombre()).grado(x.grado()).seccion(x.seccion()).periodo(x.periodo()).teacher(t).build()));}
+    public CourseDto create(@Valid @RequestBody SaveCourse x){
+        Long teacherId=x.docenteId();
+        var teacher=teacherId==null?null:teachers.findById(Objects.requireNonNull(teacherId))
+                .orElseThrow(()->new IllegalArgumentException("Docente no encontrado"));
+        var course=Objects.requireNonNull(Course.builder().codigo(x.codigo()).nombre(x.nombre())
+                .grado(x.grado()).seccion(x.seccion()).periodo(x.periodo()).teacher(teacher).build());
+        return dto(courses.save(course));
+    }
 
     @GetMapping("/{id}/students") @Transactional(readOnly = true) @PreAuthorize("hasAnyRole('ADMINISTRADOR','DOCENTE')")
     public List<StudentController.StudentDto> students(@PathVariable Long id,Authentication a){
-        var course=courses.findById(id).orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
+        var course=courses.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
         if(a.getAuthorities().stream().anyMatch(x->x.getAuthority().equals("ROLE_DOCENTE"))){
             var teacher=teachers.findByUser_Username(a.getName()).orElseThrow();
             if(course.getTeacher()==null||!Objects.equals(course.getTeacher().getId(),teacher.getId()))
                 throw new IllegalArgumentException("El curso no está asignado al docente actual.");
         }
-        return enrollments.findByCourse_IdAndActivoTrue(id).stream().map(Enrollment::getStudent).map(StudentController::dto).toList();
+        return enrollments.findByCourse_IdAndActivoTrue(id).stream()
+                .map(enrollment->Objects.requireNonNull(enrollment).getStudent())
+                .map(StudentController::dto).toList();
     }
 
     @PostMapping("/{courseId}/enroll/{studentId}") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public void enroll(@PathVariable Long courseId,@PathVariable Long studentId){var c=courses.findById(courseId).orElseThrow();var s=students.findById(studentId).orElseThrow();var e=enrollments.findByStudent_IdAndCourse_Id(studentId,courseId).orElse(Enrollment.builder().course(c).student(s).build());e.setActivo(true);enrollments.save(e);}
+    public void enroll(@PathVariable Long courseId,@PathVariable Long studentId){
+        var c=courses.findById(Objects.requireNonNull(courseId)).orElseThrow();
+        var s=students.findById(Objects.requireNonNull(studentId)).orElseThrow();
+        if(!c.isActivo()||!s.isActivo())throw new IllegalArgumentException("Estudiante o curso inactivo");
+        if(!Objects.equals(s.getGrado(),c.getGrado())||!Objects.equals(s.getSeccion(),c.getSeccion()))
+            throw new IllegalArgumentException("El grado y sección del estudiante deben coincidir con el curso");
+        var e=enrollments.findByStudent_IdAndCourse_Id(studentId,courseId).orElse(Enrollment.builder().course(c).student(s).build());
+        e.setActivo(true);
+        enrollments.save(e);
+    }
 }

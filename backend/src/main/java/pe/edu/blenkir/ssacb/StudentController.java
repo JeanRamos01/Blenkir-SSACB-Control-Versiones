@@ -41,7 +41,8 @@ public class StudentController {
             var ids=courses.findByTeacher_IdAndActivoTrue(teacher.getId()).stream()
                 .flatMap(course->enrollments.findByCourse_IdAndActivoTrue(course.getId()).stream())
                 .map(enrollment->enrollment.getStudent().getId()).collect(java.util.stream.Collectors.toSet());
-            return students.findAllById(ids).stream().map(StudentController::dto).toList();
+            return students.findAllById(Objects.requireNonNull(ids)).stream()
+                    .map(StudentController::dto).toList();
         }
         return students.findAll().stream().map(StudentController::dto).toList();
     }
@@ -52,20 +53,30 @@ public class StudentController {
         UserAccount user=null;
         if(x.username()!=null && !x.username().isBlank()){
             if(users.findByUsername(x.username()).isPresent()) throw new IllegalArgumentException("El usuario ya existe");
-            user=users.save(UserAccount.builder().username(x.username()).passwordHash(encoder.encode(AccountPasswordPolicy.requireInitial(x.password()))).displayName(x.nombres()+" "+x.apellidos()).role(Role.ESTUDIANTE).build());
+            var account=Objects.requireNonNull(UserAccount.builder().username(x.username())
+                    .passwordHash(encoder.encode(AccountPasswordPolicy.requireInitial(x.password())))
+                    .displayName(x.nombres()+" "+x.apellidos()).role(Role.ESTUDIANTE).build());
+            user=users.save(account);
         }
-        var s=Student.builder().codigo(x.codigo()).dni(dni).nombres(x.nombres()).apellidos(x.apellidos()).fechaNacimiento(x.fechaNacimiento()).grado(x.grado()).seccion(x.seccion()).email(x.email()).direccion(x.direccion()).telefono(x.telefono()).user(user).build();
-        return dto(students.save(s));
+        var student=Objects.requireNonNull(Student.builder().codigo(x.codigo()).dni(dni).nombres(x.nombres())
+                .apellidos(x.apellidos()).fechaNacimiento(x.fechaNacimiento()).grado(x.grado()).seccion(x.seccion())
+                .email(x.email()).direccion(x.direccion()).telefono(x.telefono()).user(user).build());
+        return dto(students.save(student));
     }
 
     @PutMapping("/{id}") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
     public StudentDto update(@PathVariable Long id,@Valid @RequestBody SaveStudent x){
-        var s=students.findById(id).orElseThrow(()->new IllegalArgumentException("Estudiante no encontrado"));
+        var s=students.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Estudiante no encontrado"));
         String dni = dniUniquenessService.validateAndEnsureAvailable(x.dni(), s.getId(), null, null);
         s.setCodigo(x.codigo());s.setDni(dni);s.setNombres(x.nombres());s.setApellidos(x.apellidos());s.setFechaNacimiento(x.fechaNacimiento());s.setGrado(x.grado());s.setSeccion(x.seccion());s.setEmail(x.email());s.setDireccion(x.direccion());s.setTelefono(x.telefono());
         return dto(students.save(s));
     }
 
     @PatchMapping("/{id}/status") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public StudentDto status(@PathVariable Long id,@RequestParam boolean active){var s=students.findById(id).orElseThrow();s.setActivo(active);return dto(students.save(s));}
+    public StudentDto status(@PathVariable Long id,@RequestParam boolean active){
+        var student=students.findById(Objects.requireNonNull(id)).orElseThrow();
+        student.setActivo(active);
+        return dto(students.save(student));
+    }
 }

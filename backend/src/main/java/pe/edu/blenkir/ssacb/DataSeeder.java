@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Configuration
 @ConditionalOnProperty(name = "app.demo.enabled", havingValue = "true")
@@ -29,50 +30,50 @@ public class DataSeeder {
             if (users.count() > 0) return;
 
             users.save(
-                    UserAccount.builder()
+                    Objects.requireNonNull(UserAccount.builder()
                             .username("admin")
                             .passwordHash(encoder.encode("admin123"))
                             .displayName("Administrador Blenkir")
                             .role(Role.ADMINISTRADOR)
-                            .build()
+                            .build())
             );
 
-            users.save(UserAccount.builder()
+            users.save(Objects.requireNonNull(UserAccount.builder()
                     .username("secretaria")
                     .passwordHash(encoder.encode("secretaria123"))
                     .displayName("Secretaría Blenkir")
                     .role(Role.SECRETARIA)
-                    .build());
+                    .build()));
 
             var tu = users.save(
-                    UserAccount.builder()
+                    Objects.requireNonNull(UserAccount.builder()
                             .username("docente")
                             .passwordHash(encoder.encode("docente123"))
                             .displayName("Prof. Carlos Gómez")
                             .role(Role.DOCENTE)
-                            .build()
+                            .build())
             );
 
             var su = users.save(
-                    UserAccount.builder()
+                    Objects.requireNonNull(UserAccount.builder()
                             .username("alumno")
                             .passwordHash(encoder.encode("alumno123"))
                             .displayName("Juan Diego Pérez Ramos")
                             .role(Role.ESTUDIANTE)
-                            .build()
+                            .build())
             );
 
             var gu = users.save(
-                    UserAccount.builder()
+                    Objects.requireNonNull(UserAccount.builder()
                             .username("apoderado")
                             .passwordHash(encoder.encode("apoderado123"))
                             .displayName("María Ramos López")
                             .role(Role.APODERADO)
-                            .build()
+                            .build())
             );
 
             var t = teachers.save(
-                    Teacher.builder()
+                    Objects.requireNonNull(Teacher.builder()
                             .codigo("DOC001")
                             .dni("70000001")
                             .nombres("Carlos")
@@ -80,11 +81,11 @@ public class DataSeeder {
                             .email("carlos.gomez@blenkir.edu.pe")
                             .especialidad("Matemática")
                             .user(tu)
-                            .build()
+                            .build())
             );
 
             var s = students.save(
-                    Student.builder()
+                    Objects.requireNonNull(Student.builder()
                             .codigo("EST2026001")
                             .dni("72123456")
                             .nombres("Juan Diego")
@@ -94,90 +95,90 @@ public class DataSeeder {
                             .seccion("A")
                             .email("juan.perez@blenkir.edu.pe")
                             .user(su)
-                            .build()
+                            .build())
             );
 
             var g = guardians.save(
-                    Guardian.builder()
+                    Objects.requireNonNull(Guardian.builder()
                             .dni("41234567")
                             .nombres("María")
                             .apellidos("Ramos López")
                             .telefono("987111222")
                             .email("maria.ramos@gmail.com")
                             .user(gu)
-                            .build()
+                            .build())
             );
 
             links.save(
-                    GuardianStudent.builder()
+                    Objects.requireNonNull(GuardianStudent.builder()
                             .guardian(g)
                             .student(s)
                             .parentesco("Madre")
-                            .build()
+                            .build())
             );
 
             var c = courses.save(
-                    Course.builder()
+                    Objects.requireNonNull(Course.builder()
                             .codigo("MAT5A")
                             .nombre("Matemática")
                             .grado("5° Secundaria")
                             .seccion("A")
                             .periodo("2026-I")
                             .teacher(t)
-                            .build()
+                            .build())
             );
 
             enrollments.save(
-                    Enrollment.builder()
+                    Objects.requireNonNull(Enrollment.builder()
                             .student(s)
                             .course(c)
-                            .build()
+                            .build())
             );
 
             var ev = evaluations.save(
-                    Evaluation.builder()
+                    Objects.requireNonNull(Evaluation.builder()
                             .course(c)
                             .nombre("Examen 1er bimestre")
                             .tipo("Examen")
                             .fecha(LocalDate.of(2026, 5, 28))
                             .peso(100)
-                            .build()
+                            .build())
             );
 
             grades.save(
-                    Grade.builder()
+                    Objects.requireNonNull(Grade.builder()
                             .evaluation(ev)
                             .student(s)
                             .nota(16.0)
                             .observacion("Logro esperado")
-                            .build()
+                            .build())
             );
 
             attendance.save(
-                    Attendance.builder()
+                    Objects.requireNonNull(Attendance.builder()
                             .course(c)
                             .student(s)
                             .fecha(LocalDate.of(2026, 5, 22))
                             .estado(Attendance.Estado.PRESENTE)
-                            .build()
+                            .build())
             );
 
             attendance.save(
-                    Attendance.builder()
+                    Objects.requireNonNull(Attendance.builder()
                             .course(c)
                             .student(s)
                             .fecha(LocalDate.of(2026, 5, 21))
                             .estado(Attendance.Estado.PRESENTE)
-                            .build()
+                            .build())
             );
 
             attendance.save(
-                    Attendance.builder()
+                    Objects.requireNonNull(Attendance.builder()
                             .course(c)
                             .student(s)
                             .fecha(LocalDate.of(2026, 5, 20))
                             .estado(Attendance.Estado.TARDANZA)
-                            .build()
+                            .build())
             );
         };
     }
