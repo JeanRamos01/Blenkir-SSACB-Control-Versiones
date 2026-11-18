@@ -12,7 +12,7 @@ export class AuthService{
   session$=this.subject.asObservable();
   get session(){return this.subject.value;}
   get role(){return this.session?.role || '';}
-  login(username:string,password:string){return this.http.post<Session>(`${environment.apiBaseUrl}/auth/login`,{username,password}).pipe(tap(s=>{localStorage.setItem(this.key,JSON.stringify(s));this.subject.next(s);}));}
+  login(username:string,password:string){return this.http.post<Session>(`${environment.apiBaseUrl}/api/auth/login`,{username,password}).pipe(tap(s=>{localStorage.setItem(this.key,JSON.stringify(s));this.subject.next(s);}));}
   logout(){localStorage.removeItem(this.key);this.subject.next(null);}
   private read():Session|null{try{return JSON.parse(localStorage.getItem(this.key)||'null');}catch{return null;}}
 }
