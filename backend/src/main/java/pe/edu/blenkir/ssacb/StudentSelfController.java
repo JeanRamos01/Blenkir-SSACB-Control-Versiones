@@ -14,5 +14,17 @@ public class StudentSelfController {
     public StudentSelfController(StudentRepository students,EnrollmentRepository enrollments,GradeRepository grades,AttendanceRepository attendances){this.students=students;this.enrollments=enrollments;this.grades=grades;this.attendances=attendances;}
 
     @GetMapping("/summary") @Transactional(readOnly = true)
-    public Map<String,Object> summary(Authentication a){var s=students.findByUser_Username(a.getName()).orElseThrow();var out=new LinkedHashMap<String,Object>();out.put("student",StudentController.dto(s));out.put("courses",enrollments.findByStudent_IdAndActivoTrue(s.getId()).stream().map(Enrollment::getCourse).map(CourseController::dto).toList());out.put("grades",grades.findByStudent_IdOrderByEvaluation_FechaDesc(s.getId()).stream().map(AcademicController::gradeDto).toList());out.put("attendance",attendances.findByStudent_IdOrderByFechaDesc(s.getId()).stream().map(AcademicController::attendanceDto).toList());return out;}
+    public Map<String,Object> summary(Authentication a){
+        var student=students.findByUser_Username(a.getName()).orElseThrow();
+        var out=new LinkedHashMap<String,Object>();
+        out.put("student",StudentController.dto(student));
+        out.put("courses",enrollments.findByStudent_IdAndActivoTrue(student.getId()).stream()
+                .map(enrollment->Objects.requireNonNull(enrollment).getCourse())
+                .map(CourseController::dto).toList());
+        out.put("grades",grades.findByStudent_IdOrderByEvaluation_FechaDesc(student.getId()).stream()
+                .map(AcademicController::gradeDto).toList());
+        out.put("attendance",attendances.findByStudent_IdOrderByFechaDesc(student.getId()).stream()
+                .map(AcademicController::attendanceDto).toList());
+        return out;
+    }
 }

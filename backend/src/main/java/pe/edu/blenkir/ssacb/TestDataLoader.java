@@ -241,7 +241,7 @@ public final class TestDataLoader {
             }
             System.out.printf("  %-32s %5d / %5d / %5d%n", table, count, found, count - found);
         });
-        System.out.println("Total objetivo: " + planned.values().stream().mapToInt(Integer::intValue).sum());
+        System.out.println("Total objetivo: " + planned.values().stream().mapToInt(value -> value).sum());
         System.out.println("Cada inserción omite conflictos UNIQUE existentes; ningún registro existente se actualiza.");
         System.out.println("La carga completa se ejecutará dentro de una transacción y se revierte ante un error.");
     }

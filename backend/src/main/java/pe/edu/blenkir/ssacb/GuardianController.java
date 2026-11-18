@@ -23,10 +23,28 @@ public class GuardianController {
     static ChildDto child(GuardianStudent l){var s=l.getStudent();return new ChildDto(s.getId(),s.getCodigo(),s.getDni(),s.getNombres(),s.getApellidos(),s.getGrado(),s.getSeccion(),l.getParentesco());}
 
     @GetMapping @Transactional(readOnly = true) @PreAuthorize("hasRole('ADMINISTRADOR')") public List<GuardianDto> all(){return guardians.findAll().stream().map(GuardianController::dto).toList();}
-    @PostMapping @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')") public GuardianDto create(@Valid @RequestBody SaveGuardian x){String dni = dniUniquenessService.validateAndEnsureAvailable(x.dni());if(users.findByUsername(x.username()).isPresent())throw new IllegalArgumentException("El usuario ya existe");var u=users.save(UserAccount.builder().username(x.username()).passwordHash(encoder.encode(AccountPasswordPolicy.requireInitial(x.password()))).displayName(x.nombres()+" "+x.apellidos()).role(Role.APODERADO).build());return dto(guardians.save(Guardian.builder().dni(dni).nombres(x.nombres()).apellidos(x.apellidos()).telefono(x.telefono()).email(x.email()).user(u).build()));}
+    @PostMapping @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public GuardianDto create(@Valid @RequestBody SaveGuardian x){
+        String dni=dniUniquenessService.validateAndEnsureAvailable(x.dni());
+        if(users.findByUsername(x.username()).isPresent())throw new IllegalArgumentException("El usuario ya existe");
+        var user=users.save(Objects.requireNonNull(UserAccount.builder().username(x.username())
+                .passwordHash(encoder.encode(AccountPasswordPolicy.requireInitial(x.password())))
+                .displayName(x.nombres()+" "+x.apellidos()).role(Role.APODERADO).build()));
+        var guardian=Objects.requireNonNull(Guardian.builder().dni(dni).nombres(x.nombres())
+                .apellidos(x.apellidos()).telefono(x.telefono()).email(x.email()).user(user).build());
+        return dto(guardians.save(guardian));
+    }
 
     @PostMapping("/{guardianId}/link/{studentId}") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ChildDto link(@PathVariable Long guardianId,@PathVariable Long studentId,@RequestParam(defaultValue="Apoderado") String parentesco){var g=guardians.findById(guardianId).orElseThrow();var s=students.findById(studentId).orElseThrow();var existing=links.findByGuardian_IdAndStudent_IdAndAutorizadoTrue(guardianId,studentId);if(existing.isPresent())return child(existing.get());return child(links.save(GuardianStudent.builder().guardian(g).student(s).parentesco(parentesco).build()));}
+    public ChildDto link(@PathVariable Long guardianId,@PathVariable Long studentId,@RequestParam(defaultValue="Apoderado") String parentesco){
+        var guardian=guardians.findById(Objects.requireNonNull(guardianId)).orElseThrow();
+        var student=students.findById(Objects.requireNonNull(studentId)).orElseThrow();
+        var existing=links.findByGuardian_IdAndStudent_IdAndAutorizadoTrue(guardianId,studentId);
+        if(existing.isPresent())return child(existing.get());
+        var link=Objects.requireNonNull(GuardianStudent.builder().guardian(guardian).student(student)
+                .parentesco(parentesco).build());
+        return child(links.save(link));
+    }
 
     @GetMapping("/me/children") @Transactional(readOnly = true) @PreAuthorize("hasRole('APODERADO')")
     public List<ChildDto> myChildren(Authentication a){var g=guardians.findByUser_Username(a.getName()).orElseThrow();return links.findByGuardian_IdAndAutorizadoTrue(g.getId()).stream().map(GuardianController::child).toList();}
@@ -37,7 +55,9 @@ public class GuardianController {
     private Map<String,Object> studentSummary(Student s,String parentesco){
         var gs=grades.findByStudent_IdOrderByEvaluation_FechaDesc(s.getId()).stream().map(AcademicController::gradeDto).toList();
         var at=attendances.findByStudent_IdOrderByFechaDesc(s.getId()).stream().map(AcademicController::attendanceDto).toList();
-        var cs=enrollments.findByStudent_IdAndActivoTrue(s.getId()).stream().map(Enrollment::getCourse).map(CourseController::dto).toList();
+        var cs=enrollments.findByStudent_IdAndActivoTrue(s.getId()).stream()
+                .map(enrollment->Objects.requireNonNull(enrollment).getCourse())
+                .map(CourseController::dto).toList();
         var out=new LinkedHashMap<String,Object>();out.put("student",new ChildDto(s.getId(),s.getCodigo(),s.getDni(),s.getNombres(),s.getApellidos(),s.getGrado(),s.getSeccion(),parentesco));out.put("courses",cs);out.put("grades",gs);out.put("attendance",at);return out;
     }
 }

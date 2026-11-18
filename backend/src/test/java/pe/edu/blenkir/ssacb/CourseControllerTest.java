@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class CourseControllerTest {
@@ -23,7 +22,7 @@ class CourseControllerTest {
                 .id(2L).grado("Primero de secundaria").seccion("B").build()));
 
         assertThrows(IllegalArgumentException.class, () -> controller.enroll(1L, 2L));
-        verify(enrollments, never()).save(any());
+        verifyNoInteractions(enrollments);
     }
 
     @Test
@@ -34,7 +33,7 @@ class CourseControllerTest {
                 .id(2L).grado("Primero de secundaria").seccion("A").build()));
 
         assertThrows(IllegalArgumentException.class, () -> controller.enroll(1L, 2L));
-        verify(enrollments, never()).save(any());
+        verifyNoInteractions(enrollments);
     }
 
     @Test
@@ -45,6 +44,6 @@ class CourseControllerTest {
                 .id(2L).grado("Primero de secundaria").seccion("A").activo(false).build()));
 
         assertThrows(IllegalArgumentException.class, () -> controller.enroll(1L, 2L));
-        verify(enrollments, never()).save(any());
+        verifyNoInteractions(enrollments);
     }
 }

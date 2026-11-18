@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Objects;
+
 @Configuration
 public class AdminBootstrap {
     @Bean
@@ -14,8 +16,10 @@ public class AdminBootstrap {
        @Value("${app.bootstrap.admin-password:}") String password){
         return args -> {
             if(users.count()==0 && password!=null && password.length()>=12){
-                users.save(UserAccount.builder().username(username).passwordHash(encoder.encode(password))
-                    .displayName("Administración Blenkir").role(Role.ADMINISTRADOR).build());
+                var administrator=Objects.requireNonNull(UserAccount.builder().username(username)
+                    .passwordHash(encoder.encode(password)).displayName("Administración Blenkir")
+                    .role(Role.ADMINISTRADOR).build());
+                users.save(administrator);
             }
         };
     }

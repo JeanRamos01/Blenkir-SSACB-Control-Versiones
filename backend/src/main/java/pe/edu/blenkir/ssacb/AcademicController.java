@@ -34,7 +34,13 @@ public class AcademicController {
     }
 
     @PostMapping("/evaluations") @Transactional @PreAuthorize("hasAnyRole('ADMINISTRADOR','DOCENTE')")
-    public EvaluationDto createEvaluation(@Valid @RequestBody SaveEvaluation x,Authentication a){var c=courses.findById(x.cursoId()).orElseThrow();ensureCourseAllowed(c,a);return evaluationDto(evaluations.save(Evaluation.builder().course(c).nombre(x.nombre()).tipo(x.tipo()).fecha(x.fecha()).peso(x.peso()==null?100:x.peso()).build()));}
+    public EvaluationDto createEvaluation(@Valid @RequestBody SaveEvaluation x,Authentication a){
+        var course=courses.findById(Objects.requireNonNull(x.cursoId())).orElseThrow();
+        ensureCourseAllowed(course,a);
+        var evaluation=Objects.requireNonNull(Evaluation.builder().course(course).nombre(x.nombre())
+                .tipo(x.tipo()).fecha(x.fecha()).peso(x.peso()==null?100:x.peso()).build());
+        return evaluationDto(evaluations.save(evaluation));
+    }
 
     @GetMapping("/grades") @Transactional(readOnly = true) @PreAuthorize("hasAnyRole('ADMINISTRADOR','DOCENTE')")
     public List<GradeDto> grades(@RequestParam(required=false) Long courseId,Authentication a){
@@ -44,7 +50,20 @@ public class AcademicController {
     }
 
     @PostMapping("/grades") @Transactional @PreAuthorize("hasAnyRole('ADMINISTRADOR','DOCENTE')")
-    public GradeDto saveGrade(@Valid @RequestBody SaveGrade x,Authentication a){var e=evaluations.findById(x.evaluacionId()).orElseThrow();ensureCourseAllowed(e.getCourse(),a);var s=students.findById(x.estudianteId()).orElseThrow();if(enrollments.findByStudent_IdAndCourse_Id(s.getId(),e.getCourse().getId()).filter(Enrollment::isActivo).isEmpty()) throw new IllegalArgumentException("El estudiante no está matriculado en el curso.");var g=grades.findByEvaluation_IdAndStudent_Id(e.getId(),s.getId()).orElse(Grade.builder().evaluation(e).student(s).build());g.setNota(x.nota());g.setObservacion(x.observacion());return gradeDto(grades.save(g));}
+    public GradeDto saveGrade(@Valid @RequestBody SaveGrade x,Authentication a){
+        var evaluation=evaluations.findById(Objects.requireNonNull(x.evaluacionId())).orElseThrow();
+        ensureCourseAllowed(evaluation.getCourse(),a);
+        var student=students.findById(Objects.requireNonNull(x.estudianteId())).orElseThrow();
+        if(enrollments.findByStudent_IdAndCourse_Id(student.getId(),evaluation.getCourse().getId())
+                .filter(enrollment->Objects.requireNonNull(enrollment).isActivo()).isEmpty()){
+            throw new IllegalArgumentException("El estudiante no está matriculado en el curso.");
+        }
+        var grade=grades.findByEvaluation_IdAndStudent_Id(evaluation.getId(),student.getId())
+                .orElse(Grade.builder().evaluation(evaluation).student(student).build());
+        grade.setNota(x.nota());
+        grade.setObservacion(x.observacion());
+        return gradeDto(grades.save(grade));
+    }
 
     @GetMapping("/attendance") @Transactional(readOnly = true) @PreAuthorize("hasAnyRole('ADMINISTRADOR','DOCENTE')")
     public List<AttendanceDto> attendance(@RequestParam(required=false) Long courseId,Authentication a){
@@ -54,7 +73,26 @@ public class AcademicController {
     }
 
     @PostMapping("/attendance") @Transactional @PreAuthorize("hasAnyRole('ADMINISTRADOR','DOCENTE')")
-    public AttendanceDto saveAttendance(@Valid @RequestBody SaveAttendance x,Authentication a){var c=courses.findById(x.cursoId()).orElseThrow();ensureCourseAllowed(c,a);var s=students.findById(x.estudianteId()).orElseThrow();if(enrollments.findByStudent_IdAndCourse_Id(s.getId(),c.getId()).filter(Enrollment::isActivo).isEmpty()) throw new IllegalArgumentException("El estudiante no está matriculado en el curso.");Attendance.Estado estado;try{estado=Attendance.Estado.valueOf(x.estado().toUpperCase());}catch(Exception ex){throw new IllegalArgumentException("Estado de asistencia inválido");}var item=attendances.findByCourse_IdAndStudent_IdAndFecha(c.getId(),s.getId(),x.fecha()).orElse(Attendance.builder().course(c).student(s).fecha(x.fecha()).build());item.setEstado(estado);item.setObservacion(x.observacion());return attendanceDto(attendances.save(item));}
+    public AttendanceDto saveAttendance(@Valid @RequestBody SaveAttendance x,Authentication a){
+        var course=courses.findById(Objects.requireNonNull(x.cursoId())).orElseThrow();
+        ensureCourseAllowed(course,a);
+        var student=students.findById(Objects.requireNonNull(x.estudianteId())).orElseThrow();
+        if(enrollments.findByStudent_IdAndCourse_Id(student.getId(),course.getId())
+                .filter(enrollment->Objects.requireNonNull(enrollment).isActivo()).isEmpty()){
+            throw new IllegalArgumentException("El estudiante no está matriculado en el curso.");
+        }
+        Attendance.Estado estado;
+        try{
+            estado=Attendance.Estado.valueOf(x.estado().toUpperCase());
+        }catch(Exception ex){
+            throw new IllegalArgumentException("Estado de asistencia inválido");
+        }
+        var item=attendances.findByCourse_IdAndStudent_IdAndFecha(course.getId(),student.getId(),x.fecha())
+                .orElse(Attendance.builder().course(course).student(student).fecha(x.fecha()).build());
+        item.setEstado(estado);
+        item.setObservacion(x.observacion());
+        return attendanceDto(attendances.save(item));
+    }
 
     private void ensureCourseAllowed(Course c,Authentication a){if(isRole(a,"DOCENTE")){var t=teachers.findByUser_Username(a.getName()).orElseThrow();if(c.getTeacher()==null||!Objects.equals(c.getTeacher().getId(),t.getId()))throw new IllegalArgumentException("El curso no está asignado al docente actual.");}}
     private boolean isRole(Authentication a,String role){return a.getAuthorities().stream().anyMatch(x->x.getAuthority().equals("ROLE_"+role));}

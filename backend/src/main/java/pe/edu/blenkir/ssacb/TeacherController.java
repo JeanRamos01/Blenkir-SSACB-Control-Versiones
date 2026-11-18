@@ -30,7 +30,16 @@ public class TeacherController {
     @GetMapping @PreAuthorize("hasRole('ADMINISTRADOR')") public List<TeacherDto> all(){return teachers.findAll().stream().map(TeacherController::dto).toList();}
     @PostMapping @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')") public TeacherDto create(@Valid @RequestBody SaveTeacher x){
         String dni = dniUniquenessService.validateAndEnsureAvailable(x.dni());
-        UserAccount u=null; if(x.username()!=null&&!x.username().isBlank()){ if(users.findByUsername(x.username()).isPresent())throw new IllegalArgumentException("El usuario ya existe"); u=users.save(UserAccount.builder().username(x.username()).passwordHash(encoder.encode(AccountPasswordPolicy.requireInitial(x.password()))).displayName(x.nombres()+" "+x.apellidos()).role(Role.DOCENTE).build()); }
-        return dto(teachers.save(Teacher.builder().codigo(x.codigo()).dni(dni).nombres(x.nombres()).apellidos(x.apellidos()).email(x.email()).especialidad(x.especialidad()).user(u).build()));
+        UserAccount user=null;
+        if(x.username()!=null&&!x.username().isBlank()){
+            if(users.findByUsername(x.username()).isPresent())throw new IllegalArgumentException("El usuario ya existe");
+            var account=Objects.requireNonNull(UserAccount.builder().username(x.username())
+                    .passwordHash(encoder.encode(AccountPasswordPolicy.requireInitial(x.password())))
+                    .displayName(x.nombres()+" "+x.apellidos()).role(Role.DOCENTE).build());
+            user=users.save(account);
+        }
+        var teacher=Objects.requireNonNull(Teacher.builder().codigo(x.codigo()).dni(dni).nombres(x.nombres())
+                .apellidos(x.apellidos()).email(x.email()).especialidad(x.especialidad()).user(user).build());
+        return dto(teachers.save(teacher));
     }
 }

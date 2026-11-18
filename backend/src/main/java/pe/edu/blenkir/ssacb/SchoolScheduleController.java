@@ -32,7 +32,8 @@ public class SchoolScheduleController {
         String role=auth.getAuthorities().iterator().next().getAuthority();
         if(role.equals("ROLE_DOCENTE")){
             var teacher=teachers.findByUser_Username(auth.getName()).orElseThrow();
-            var ids=courses.findByTeacher_IdAndActivoTrue(teacher.getId()).stream().map(Course::getId).toList();
+            var ids=courses.findByTeacher_IdAndActivoTrue(teacher.getId()).stream()
+                    .map(course->Objects.requireNonNull(course).getId()).toList();
             return ids.isEmpty()?List.of():schedules.findByCourse_IdInOrderByDiaSemanaAscHoraInicioAsc(ids).stream().map(SchoolScheduleController::dto).toList();
         }
         if(role.equals("ROLE_ESTUDIANTE")){
@@ -46,7 +47,8 @@ public class SchoolScheduleController {
     @PostMapping @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
     public ScheduleDto create(@Valid @RequestBody ScheduleRequest r,Authentication auth){
         if(!r.horaInicio().isBefore(r.horaFin()))throw new IllegalArgumentException("Hora final debe ser posterior a la inicial");
-        var course=courses.findById(r.cursoId()).orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
+        var course=courses.findById(Objects.requireNonNull(r.cursoId()))
+                .orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
         for(var other:schedules.findAllByOrderByDiaSemanaAscHoraInicioAsc()){
             if(!other.getDiaSemana().equals(r.diaSemana()) ||
                !(r.horaInicio().isBefore(other.getHoraFin()) && other.getHoraInicio().isBefore(r.horaFin())))continue;
@@ -56,14 +58,16 @@ public class SchoolScheduleController {
             boolean sameRoom=r.aula()!=null && !r.aula().isBlank() && r.aula().equalsIgnoreCase(other.getAula());
             if(sameSection || sameTeacher || sameRoom)throw new IllegalArgumentException("Cruce de horario en sección, docente o aula");
         }
-        var item=schedules.save(SchoolSchedule.builder().course(course).diaSemana(r.diaSemana())
-         .horaInicio(r.horaInicio()).horaFin(r.horaFin()).aula(r.aula()).build());
+        var schedule=Objects.requireNonNull(SchoolSchedule.builder().course(course).diaSemana(r.diaSemana())
+                .horaInicio(r.horaInicio()).horaFin(r.horaFin()).aula(r.aula()).build());
+        var item=schedules.save(schedule);
         audit.log(auth.getName(),"CREAR","HORARIO",item.getId());return dto(item);
     }
 
     @DeleteMapping("/{id}") @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
     public void delete(@PathVariable Long id,Authentication auth){
-        if(!schedules.existsById(id))throw new IllegalArgumentException("Horario no encontrado");
-        schedules.deleteById(id);audit.log(auth.getName(),"ELIMINAR","HORARIO",id);
+        Long scheduleId=Objects.requireNonNull(id);
+        if(!schedules.existsById(scheduleId))throw new IllegalArgumentException("Horario no encontrado");
+        schedules.deleteById(scheduleId);audit.log(auth.getName(),"ELIMINAR","HORARIO",scheduleId);
     }
 }
