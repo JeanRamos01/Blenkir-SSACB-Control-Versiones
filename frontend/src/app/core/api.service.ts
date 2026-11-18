@@ -4,7 +4,9 @@ import { environment } from '../../environments/environment';
 @Injectable({providedIn:'root'})
 export class ApiService{
   private http=inject(HttpClient); private base=environment.apiBaseUrl;
-  dashboard(){return this.http.get<any>(`${this.base}/dashboard`);}
+  dashboard(){
+  return this.http.get<any>(`${this.base}/api/dashboard`);
+}
   students(){return this.http.get<any[]>(`${this.base}/students`);}
   addStudent(x:any){return this.http.post(`${this.base}/students`,x);}
   teachers(){return this.http.get<any[]>(`${this.base}/teachers`);}
