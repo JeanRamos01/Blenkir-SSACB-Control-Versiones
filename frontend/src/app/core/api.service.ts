@@ -3,9 +3,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 @Injectable({providedIn:'root'})
 export class ApiService{
-  private http=inject(HttpClient); private base=environment.apiBaseUrl;
+  private http=inject(HttpClient); private base=`${environment.apiBaseUrl}/api`;
   dashboard(){
-  return this.http.get<any>(`${this.base}/api/dashboard`);
+  return this.http.get<any>(`${this.base}/dashboard`);
 }
   students(){return this.http.get<any[]>(`${this.base}/students`);}
   addStudent(x:any){return this.http.post(`${this.base}/students`,x);}
