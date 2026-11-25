@@ -24,37 +24,51 @@ import { AuditComponent } from './pages/audit.component';
 import { SiagieComponent } from './pages/siagie.component';
 import { CompetenciesComponent } from './pages/competencies.component';
 import { StudentRecordsComponent } from './pages/student-records.component';
+import { HomeComponent } from './pages/home/home.component';
 
-export const routes:Routes=[
- {path:'login',component:LoginComponent},
- {path:'',component:LayoutComponent,canActivate:[authGuard],children:[
-   {path:'dashboard',component:DashboardComponent},
-   {path:'students',component:StudentsComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR']}},
-   {path:'teachers',component:TeachersComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR']}},
-   {path:'courses',component:CoursesComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','DOCENTE']}},
-   {path:'evaluations',component:EvaluationsComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','DOCENTE']}},
-   {path:'grades',component:GradesComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','DOCENTE']}},
-   {path:'attendance',component:AttendanceComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','DOCENTE']}},
-   {path:'guardians',component:GuardiansComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR']}},
-   {path:'student',pathMatch:'full',redirectTo:'/student/profile'},
-   {path:'student/profile',component:StudentPortalComponent,canActivate:[roleGuard],data:{roles:['ESTUDIANTE'],section:'profile'}},
-   {path:'student/courses',component:StudentPortalComponent,canActivate:[roleGuard],data:{roles:['ESTUDIANTE'],section:'courses'}},
-   {path:'student/grades',component:StudentPortalComponent,canActivate:[roleGuard],data:{roles:['ESTUDIANTE'],section:'grades'}},
-   {path:'student/attendance',component:StudentPortalComponent,canActivate:[roleGuard],data:{roles:['ESTUDIANTE'],section:'attendance'}},
-   {path:'guardian',component:GuardianPortalComponent,canActivate:[roleGuard],data:{roles:['APODERADO']}},
-   {path:'reports',component:ReportsComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','DOCENTE']}},
-   {path:'enrollments',component:EnrollmentsComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','SECRETARIA']}},
-   {path:'curriculum',component:CurriculumComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR']}},
-   {path:'schedules',component:SchedulesComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','SECRETARIA','DOCENTE','ESTUDIANTE']}},
-   {path:'staff',component:StaffComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR']}},
-   {path:'treasury',component:TreasuryComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','SECRETARIA']}},
-   {path:'cash',component:CashComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','SECRETARIA']}},
-   {path:'notifications',component:NotificationsComponent},
-   {path:'audit',component:AuditComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR']}},
-   {path:'siagie',component:SiagieComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','SECRETARIA']}},
-   {path:'competencies',component:CompetenciesComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','DOCENTE']}},
-   {path:'student-records',component:StudentRecordsComponent,canActivate:[roleGuard],data:{roles:['ADMINISTRADOR','DOCENTE']}},
-   {path:'',pathMatch:'full',redirectTo:'dashboard'}
- ]},
- {path:'**',redirectTo:''}
+export const routes: Routes = [
+  // Página institucional pública
+  {
+    path: '',
+    component: HomeComponent,
+    pathMatch: 'full'
+  },
+
+  // Inicio de sesión
+  {
+    path: 'login',
+    component: LoginComponent
+  },
+  {
+    path: '', component: LayoutComponent, canActivate: [authGuard], children: [
+      { path: 'dashboard', component: DashboardComponent },
+      { path: 'students', component: StudentsComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR'] } },
+      { path: 'teachers', component: TeachersComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR'] } },
+      { path: 'courses', component: CoursesComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'DOCENTE'] } },
+      { path: 'evaluations', component: EvaluationsComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'DOCENTE'] } },
+      { path: 'grades', component: GradesComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'DOCENTE'] } },
+      { path: 'attendance', component: AttendanceComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'DOCENTE'] } },
+      { path: 'guardians', component: GuardiansComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR'] } },
+      { path: 'student', pathMatch: 'full', redirectTo: '/student/profile' },
+      { path: 'student/profile', component: StudentPortalComponent, canActivate: [roleGuard], data: { roles: ['ESTUDIANTE'], section: 'profile' } },
+      { path: 'student/courses', component: StudentPortalComponent, canActivate: [roleGuard], data: { roles: ['ESTUDIANTE'], section: 'courses' } },
+      { path: 'student/grades', component: StudentPortalComponent, canActivate: [roleGuard], data: { roles: ['ESTUDIANTE'], section: 'grades' } },
+      { path: 'student/attendance', component: StudentPortalComponent, canActivate: [roleGuard], data: { roles: ['ESTUDIANTE'], section: 'attendance' } },
+      { path: 'guardian', component: GuardianPortalComponent, canActivate: [roleGuard], data: { roles: ['APODERADO'] } },
+      { path: 'reports', component: ReportsComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'DOCENTE'] } },
+      { path: 'enrollments', component: EnrollmentsComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'SECRETARIA'] } },
+      { path: 'curriculum', component: CurriculumComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR'] } },
+      { path: 'schedules', component: SchedulesComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'SECRETARIA', 'DOCENTE', 'ESTUDIANTE'] } },
+      { path: 'staff', component: StaffComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR'] } },
+      { path: 'treasury', component: TreasuryComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'SECRETARIA'] } },
+      { path: 'cash', component: CashComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'SECRETARIA'] } },
+      { path: 'notifications', component: NotificationsComponent },
+      { path: 'audit', component: AuditComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR'] } },
+      { path: 'siagie', component: SiagieComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'SECRETARIA'] } },
+      { path: 'competencies', component: CompetenciesComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'DOCENTE'] } },
+      { path: 'student-records', component: StudentRecordsComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'DOCENTE'] } },
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' }
+    ]
+  },
+  { path: '**', redirectTo: '' }
 ];
