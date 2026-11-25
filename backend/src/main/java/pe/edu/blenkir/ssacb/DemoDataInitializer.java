@@ -19,6 +19,12 @@ public class DemoDataInitializer {
     private static final String DEMO_TEACHER = "demo-docente";
     private static final String DEMO_STUDENT = "demo-estudiante-riesgo";
     private static final String DEMO_GUARDIAN = "demo-apoderado";
+    private static final String DEMO_TEACHER_CODE = "DEMO-DOC-001";
+    private static final String DEMO_TEACHER_DNI = "99990001";
+    private static final String DEMO_STUDENT_CODE = "DEMO-EST-001";
+    private static final String DEMO_STUDENT_DNI = "99990002";
+    private static final String DEMO_GUARDIAN_DNI = "99990003";
+    private static final String DEMO_COURSE_CODE = "DEMO-MAT-2026";
 
     private final JdbcTemplate jdbc;
     private final UserAccountRepository users;
@@ -39,6 +45,7 @@ public class DemoDataInitializer {
     private final String teacherPassword;
     private final String studentPassword;
     private final String guardianPassword;
+    private final boolean allowExistingData;
 
     public DemoDataInitializer(JdbcTemplate jdbc, UserAccountRepository users, StudentRepository students,
             TeacherRepository teachers, GuardianRepository guardians, GuardianStudentRepository links,
@@ -49,7 +56,8 @@ public class DemoDataInitializer {
             @Value("${app.demo.secretariat-password:}") String secretariatPassword,
             @Value("${app.demo.teacher-password:}") String teacherPassword,
             @Value("${app.demo.student-password:}") String studentPassword,
-            @Value("${app.demo.guardian-password:}") String guardianPassword) {
+            @Value("${app.demo.guardian-password:}") String guardianPassword,
+            @Value("${app.demo.allow-existing-data:false}") boolean allowExistingData) {
         this.jdbc = jdbc;
         this.users = users;
         this.students = students;
@@ -69,6 +77,7 @@ public class DemoDataInitializer {
         this.teacherPassword = teacherPassword;
         this.studentPassword = studentPassword;
         this.guardianPassword = guardianPassword;
+        this.allowExistingData = allowExistingData;
     }
 
     @Transactional
@@ -78,8 +87,19 @@ public class DemoDataInitializer {
             log.info("Conjunto DEMO ya inicializado; se conservan cuentas y datos existentes.");
             return;
         }
-        if (hasAnyApplicationData()) {
+        if (hasAnyDemoAccount()) {
+            log.warn("Inicialización DEMO omitida: ya existe una cuenta DEMO, pero el conjunto está incompleto; no se modifican datos.");
+            return;
+        }
+        if (!allowExistingData && hasAnyApplicationData()) {
             log.warn("Inicialización DEMO omitida: la base no está vacía o contiene una inicialización parcial.");
+            return;
+        }
+        if (allowExistingData) {
+            log.warn("DEMO_ALLOW_EXISTING_DATA=true: se agregará el conjunto DEMO sin modificar los registros existentes.");
+        }
+        if (hasDemoIdentityConflict()) {
+            log.warn("Inicialización DEMO omitida: uno o más identificadores reservados DEMO ya pertenecen a otros registros.");
             return;
         }
 
@@ -96,23 +116,23 @@ public class DemoDataInitializer {
         var guardianAccount = users.save(account(DEMO_GUARDIAN, "Apoderado DEMO", Role.APODERADO, guardianPassword));
 
         var teacher = teachers.save(Objects.requireNonNull(Teacher.builder()
-                .codigo("DEMO-DOC-001").dni("99990001").nombres("Docente").apellidos("DEMO")
+                .codigo(DEMO_TEACHER_CODE).dni(DEMO_TEACHER_DNI).nombres("Docente").apellidos("DEMO")
                 .email("demo-docente@example.invalid").especialidad("Matemática")
                 .user(teacherAccount).build()));
         var student = students.save(Objects.requireNonNull(Student.builder()
-                .codigo("DEMO-EST-001").dni("99990002").nombres("Estudiante")
+                .codigo(DEMO_STUDENT_CODE).dni(DEMO_STUDENT_DNI).nombres("Estudiante")
                 .apellidos("DEMO Riesgo Académico").fechaNacimiento(LocalDate.of(2010, 3, 14))
                 .grado("5° Secundaria").seccion("A").email("demo-estudiante@example.invalid")
                 .user(studentAccount).build()));
         var guardian = guardians.save(Objects.requireNonNull(Guardian.builder()
-                .dni("99990003").nombres("Apoderado").apellidos("DEMO")
+                .dni(DEMO_GUARDIAN_DNI).nombres("Apoderado").apellidos("DEMO")
                 .telefono("900000003").email("demo-apoderado@example.invalid")
                 .user(guardianAccount).build()));
         links.save(Objects.requireNonNull(GuardianStudent.builder()
                 .guardian(guardian).student(student).parentesco("Apoderado DEMO").autorizado(true).build()));
 
         var course = courses.save(Objects.requireNonNull(Course.builder()
-                .codigo("DEMO-MAT-2026").nombre("Matemática DEMO").grado("5° Secundaria")
+                .codigo(DEMO_COURSE_CODE).nombre("Matemática DEMO").grado("5° Secundaria")
                 .seccion("A").periodo("DEMO-2026").teacher(teacher).build()));
         enrollments.save(Objects.requireNonNull(Enrollment.builder().student(student).course(course).activo(true).build()));
 
@@ -128,7 +148,24 @@ public class DemoDataInitializer {
                 .fecha(LocalDate.now().minusDays(1)).estado(Attendance.Estado.PRESENTE).build()));
 
         risk.evaluateStudent(student.getId());
-        log.info("Datos DEMO creados en la base DEMO vacía; no se registran contraseñas en logs.");
+        log.info("Datos DEMO creados; no se registran contraseñas en logs.");
+    }
+
+    private boolean hasAnyDemoAccount() {
+        return users.findByUsername(DEMO_ADMIN).isPresent()
+                || users.findByUsername(DEMO_SECRETARIA).isPresent()
+                || users.findByUsername(DEMO_TEACHER).isPresent()
+                || users.findByUsername(DEMO_STUDENT).isPresent()
+                || users.findByUsername(DEMO_GUARDIAN).isPresent();
+    }
+
+    private boolean hasDemoIdentityConflict() {
+        return teachers.findByCodigo(DEMO_TEACHER_CODE).isPresent()
+                || teachers.findByDni(DEMO_TEACHER_DNI).isPresent()
+                || students.findByCodigo(DEMO_STUDENT_CODE).isPresent()
+                || students.findByDni(DEMO_STUDENT_DNI).isPresent()
+                || guardians.findByDni(DEMO_GUARDIAN_DNI).isPresent()
+                || courses.findByCodigo(DEMO_COURSE_CODE).isPresent();
     }
 
     private UserAccount account(String username, String displayName, Role role, String password) {
@@ -158,7 +195,7 @@ public class DemoDataInitializer {
         var teacher = teachers.findByUser_Username(DEMO_TEACHER);
         var guardian = guardians.findByUser_Username(DEMO_GUARDIAN);
         if (student.isEmpty() || teacher.isEmpty() || guardian.isEmpty()) return false;
-        var course = courses.findAll().stream().filter(c -> "DEMO-MAT-2026".equals(c.getCodigo())).findFirst();
+        var course = courses.findByCodigo(DEMO_COURSE_CODE);
         return course.isPresent() && course.get().getTeacher() != null
                 && Objects.equals(course.get().getTeacher().getId(), teacher.get().getId())
                 && enrollments.findByStudent_IdAndCourse_Id(student.get().getId(), course.get().getId()).isPresent()

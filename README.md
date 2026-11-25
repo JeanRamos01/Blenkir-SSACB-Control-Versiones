@@ -94,12 +94,13 @@ Abrir `http://localhost:4200`.
 
 ## Credenciales de acceso para pruebas
 
-La inicialización DEMO está desactivada de forma predeterminada y debe usarse únicamente en una base PostgreSQL de pruebas separada. No la habilites en la base con información real. Render debe apuntar el servicio DEMO a su propia base de datos.
+La inicialización DEMO está desactivada de forma predeterminada. Se recomienda ejecutarla en una base PostgreSQL separada. En producción, solo debe habilitarse con autorización explícita: agrega registros de prueba visibles junto con los datos reales y no los elimina automáticamente.
 
 Configura las variables de entorno en el servicio de pruebas de Render:
 
 ```text
 DEMO_DATA_ENABLED=true
+DEMO_ALLOW_EXISTING_DATA=true
 DEMO_ADMIN_PASSWORD=<secreto de al menos 12 caracteres>
 DEMO_SECRETARIA_PASSWORD=<secreto de al menos 12 caracteres>
 DEMO_DOCENTE_PASSWORD=<secreto de al menos 12 caracteres>
@@ -110,7 +111,9 @@ ACADEMIC_RISK_THRESHOLD=11
 
 Guarda los valores de contraseña únicamente como variables secretas del servicio; no los incluyas en el repositorio ni en logs. Los usuarios DEMO estables son `demo-admin`, `demo-secretaria`, `demo-docente`, `demo-estudiante-riesgo` y `demo-apoderado`. Las contraseñas las define quien administra el entorno DEMO y no se escriben en este README. Al habilitar DEMO, no configures `BOOTSTRAP_ADMIN_PASSWORD`; el administrador DEMO se crea desde `DEMO_ADMIN_PASSWORD`.
 
-En una base vacía se crean esas cinco cuentas, un docente, un estudiante DEMO matriculado en Matemática, dos evaluaciones y calificaciones, asistencia y el vínculo autorizado con su apoderado. El promedio DEMO (9/20) queda por debajo del umbral configurado y genera una alerta. La inicialización es transaccional e idempotente: en reinicios conserva los datos y contraseñas ya creados. Si encuentra cualquier dato previo o una inicialización incompleta, no inserta ni modifica registros.
+`DEMO_ALLOW_EXISTING_DATA` tiene valor predeterminado `false`. Para agregar este conjunto a una base poblada, habilita explícitamente ambas variables `DEMO_DATA_ENABLED=true` y `DEMO_ALLOW_EXISTING_DATA=true`. Antes de hacerlo, confirma que la migración de alertas ya se aplicó. La inicialización verifica colisiones con usuarios, DNI y códigos reservados; si encuentra alguna, o detecta una inicialización DEMO parcial, omite la inserción y no altera registros. Nunca se restablecen contraseñas ni se sobrescriben registros existentes.
+
+Al inicializarse se crean esas cinco cuentas, un docente, un estudiante DEMO matriculado en Matemática, dos evaluaciones y calificaciones, asistencia y el vínculo autorizado con su apoderado. El promedio DEMO (9/20) queda por debajo del umbral configurado y genera una alerta. La inicialización es transaccional e idempotente: en reinicios conserva los datos y contraseñas ya creados. Si agregas el escenario DEMO a producción, esos registros de prueba permanecerán allí hasta que un administrador los gestione; el inicializador no los elimina.
 
 El umbral se aplica al promedio aritmético de las calificaciones registradas del estudiante por curso y periodo. Se genera una alerta al guardar calificaciones que lo hagan caer por debajo del umbral. Las alertas no se envían por correo; se consultan desde las sesiones autorizadas del administrador/docente, el estudiante afectado y su apoderado vinculado. El esquema actual no mantiene sesiones revocables: después de restablecer una contraseña, los JWT emitidos anteriormente pueden seguir vigentes hasta expirar.
 

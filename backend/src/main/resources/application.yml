@@ -22,6 +22,7 @@ app:
     admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
   demo:
     enabled: ${DEMO_DATA_ENABLED:false}
+    allow-existing-data: ${DEMO_ALLOW_EXISTING_DATA:false}
     admin-password: ${DEMO_ADMIN_PASSWORD:}
     secretariat-password: ${DEMO_SECRETARIA_PASSWORD:}
     teacher-password: ${DEMO_DOCENTE_PASSWORD:}
