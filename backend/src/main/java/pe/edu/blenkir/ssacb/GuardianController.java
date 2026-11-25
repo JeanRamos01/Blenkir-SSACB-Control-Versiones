@@ -13,8 +13,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/guardians")
 public class GuardianController {
-    private final GuardianRepository guardians; private final GuardianStudentRepository links; private final StudentRepository students; private final UserAccountRepository users; private final PasswordEncoder encoder; private final GradeRepository grades; private final AttendanceRepository attendances; private final EnrollmentRepository enrollments; private final DniUniquenessService dniUniquenessService;
-    public GuardianController(GuardianRepository guardians,GuardianStudentRepository links,StudentRepository students,UserAccountRepository users,PasswordEncoder encoder,GradeRepository grades,AttendanceRepository attendances,EnrollmentRepository enrollments,DniUniquenessService dniUniquenessService){this.guardians=guardians;this.links=links;this.students=students;this.users=users;this.encoder=encoder;this.grades=grades;this.attendances=attendances;this.enrollments=enrollments;this.dniUniquenessService=dniUniquenessService;}
+    private final GuardianRepository guardians; private final GuardianStudentRepository links; private final StudentRepository students; private final UserAccountRepository users; private final PasswordEncoder encoder; private final GradeRepository grades; private final AttendanceRepository attendances; private final EnrollmentRepository enrollments; private final DniUniquenessService dniUniquenessService; private final AcademicRiskService academicRisk;
+    public GuardianController(GuardianRepository guardians,GuardianStudentRepository links,StudentRepository students,UserAccountRepository users,PasswordEncoder encoder,GradeRepository grades,AttendanceRepository attendances,EnrollmentRepository enrollments,DniUniquenessService dniUniquenessService,AcademicRiskService academicRisk){this.guardians=guardians;this.links=links;this.students=students;this.users=users;this.encoder=encoder;this.grades=grades;this.attendances=attendances;this.enrollments=enrollments;this.dniUniquenessService=dniUniquenessService;this.academicRisk=academicRisk;}
 
     public record GuardianDto(Long id,String dni,String nombres,String apellidos,String telefono,String email,boolean activo){}
     public record SaveGuardian(@NotBlank @Pattern(regexp = "^\\d{8}$", message = "El DNI debe tener exactamente 8 dígitos numéricos.") String dni,@NotBlank String nombres,@NotBlank String apellidos,String telefono,String email,@NotBlank String username,String password){}
@@ -86,6 +86,6 @@ public class GuardianController {
         var cs=enrollments.findByStudent_IdAndActivoTrue(s.getId()).stream()
                 .map(enrollment->Objects.requireNonNull(enrollment).getCourse())
                 .map(CourseController::dto).toList();
-        var out=new LinkedHashMap<String,Object>();out.put("student",new ChildDto(s.getId(),s.getCodigo(),s.getDni(),s.getNombres(),s.getApellidos(),s.getGrado(),s.getSeccion(),parentesco));out.put("courses",cs);out.put("grades",gs);out.put("attendance",at);return out;
+        var out=new LinkedHashMap<String,Object>();out.put("student",new ChildDto(s.getId(),s.getCodigo(),s.getDni(),s.getNombres(),s.getApellidos(),s.getGrado(),s.getSeccion(),parentesco));out.put("courses",cs);out.put("grades",gs);out.put("attendance",at);out.put("alerts",academicRisk.listForStudent(s.getId()));return out;
     }
 }

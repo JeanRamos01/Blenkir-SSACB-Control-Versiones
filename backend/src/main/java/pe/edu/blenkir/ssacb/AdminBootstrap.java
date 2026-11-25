@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Objects;
@@ -11,6 +12,7 @@ import java.util.Objects;
 @Configuration
 public class AdminBootstrap {
     @Bean
+    @ConditionalOnProperty(name = "app.demo.enabled", havingValue = "false", matchIfMissing = true)
     CommandLineRunner bootstrapAdministrator(UserAccountRepository users,PasswordEncoder encoder,
        @Value("${app.bootstrap.admin-username:admin}") String username,
        @Value("${app.bootstrap.admin-password:}") String password){

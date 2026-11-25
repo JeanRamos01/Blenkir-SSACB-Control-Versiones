@@ -24,6 +24,8 @@ import { AuditComponent } from './pages/audit.component';
 import { SiagieComponent } from './pages/siagie.component';
 import { CompetenciesComponent } from './pages/competencies.component';
 import { StudentRecordsComponent } from './pages/student-records.component';
+import { AcademicAlertsComponent } from './pages/academic-alerts.component';
+import { UserManagementComponent } from './pages/user-management.component';
 import { HomeComponent } from './pages/home/home.component';
 
 export const routes: Routes = [
@@ -43,6 +45,8 @@ export const routes: Routes = [
     path: '', component: LayoutComponent, canActivate: [authGuard], children: [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'students', component: StudentsComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR'] } },
+      { path: 'user-management', component: UserManagementComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR'] } },
+      { path: 'academic-alerts', component: AcademicAlertsComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'DOCENTE'] } },
       { path: 'teachers', component: TeachersComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR'] } },
       { path: 'courses', component: CoursesComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'DOCENTE'] } },
       { path: 'evaluations', component: EvaluationsComponent, canActivate: [roleGuard], data: { roles: ['ADMINISTRADOR', 'DOCENTE'] } },

@@ -19,6 +19,8 @@ import { AuthService } from '../core/auth.service';
            <a routerLink="/evaluations" routerLinkActive="active"><i class="bi bi-clipboard2-check"></i> Evaluaciones</a>
            <a routerLink="/reports" routerLinkActive="active"><i class="bi bi-bar-chart"></i> Reportes</a>
            <a routerLink="/notifications" routerLinkActive="active"><i class="bi bi-megaphone"></i> Comunicados</a>
+           <a routerLink="/academic-alerts" routerLinkActive="active"><i class="bi bi-exclamation-triangle"></i> Riesgo académico</a>
+           <a routerLink="/user-management" routerLinkActive="active"><i class="bi bi-key"></i> Usuarios y claves</a>
            <a routerLink="/staff" routerLinkActive="active"><i class="bi bi-person-badge"></i> Personal</a>
            <details class="more-options">
              <summary><i class="bi bi-three-dots"></i><span>Más opciones</span><i class="bi bi-chevron-down more-options-chevron"></i></summary>
@@ -54,6 +56,7 @@ import { AuthService } from '../core/auth.service';
            <a routerLink="/competencies" routerLinkActive="active"><i class="bi bi-award"></i> Competencias</a>
            <a routerLink="/student-records" routerLinkActive="active"><i class="bi bi-file-person"></i> Ficha del estudiante</a>
            <a routerLink="/reports" routerLinkActive="active"><i class="bi bi-bar-chart"></i> Reportes</a>
+           <a routerLink="/academic-alerts" routerLinkActive="active"><i class="bi bi-exclamation-triangle"></i> Riesgo académico</a>
          </ng-container>
          <ng-container *ngSwitchCase="'ESTUDIANTE'">
            <a routerLink="/student/profile" routerLinkActive="active"><i class="bi bi-person"></i> Mi perfil</a>

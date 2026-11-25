@@ -17,8 +17,18 @@ spring:
         jdbc.time_zone: America/Lima
 
 app:
+  bootstrap:
+    admin-username: ${BOOTSTRAP_ADMIN_USERNAME:admin}
+    admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
   demo:
-    enabled: false
+    enabled: ${DEMO_DATA_ENABLED:false}
+    admin-password: ${DEMO_ADMIN_PASSWORD:}
+    secretariat-password: ${DEMO_SECRETARIA_PASSWORD:}
+    teacher-password: ${DEMO_DOCENTE_PASSWORD:}
+    student-password: ${DEMO_ESTUDIANTE_PASSWORD:}
+    guardian-password: ${DEMO_APODERADO_PASSWORD:}
+  academic-risk:
+    threshold: ${ACADEMIC_RISK_THRESHOLD:11.0}
   jwt:
     # Cambiar en producción. Debe ser Base64 y de al menos 256 bits.
     secret: ${JWT_SECRET:VGhpcyIsIGEgdmVyeSBzZWN1cmUgYW5kIGxvbmcgYmFzZTY0IHNlY3JldCBrZXkgZm9yIGp3ZCBhdXRoZW50aWNhdGlvbiEhIQ==}

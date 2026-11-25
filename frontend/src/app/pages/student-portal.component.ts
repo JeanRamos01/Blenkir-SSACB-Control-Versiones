@@ -48,6 +48,7 @@ interface StudentSummary {
   courses: StudentCourse[];
   grades: StudentGrade[];
   attendance: StudentAttendance[];
+  alerts: { curso: string; periodo: string; motivo: string; promedio: number; umbral: number; estado: string; fechaGeneracion: string }[];
 }
 
 @Component({
@@ -118,6 +119,14 @@ interface StudentSummary {
               </tbody>
             </table>
           </div>
+          <section *ngIf="data.alerts?.length" class="mt-4">
+            <h3>Alertas de seguimiento académico</h3>
+            <div *ngFor="let alert of data.alerts" class="alert alert-warning">
+              <strong>{{ alert.curso }} · {{ alert.periodo }}</strong>
+              <div>{{ alert.motivo }}</div>
+              <small>Promedio {{ alert.promedio }}/20 · Estado {{ alert.estado }} · {{ alert.fechaGeneracion | date:'mediumDate' }}</small>
+            </div>
+          </section>
         </section>
 
         <section *ngSwitchCase="'attendance'" class="panel">

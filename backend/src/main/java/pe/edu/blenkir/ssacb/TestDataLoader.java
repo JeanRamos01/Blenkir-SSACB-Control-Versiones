@@ -180,7 +180,7 @@ public final class TestDataLoader {
             throw new IllegalStateException("El esquema no coincide con las entidades SQL/JPA o sus restricciones: "
                     + String.join("; ", problems));
         }
-        System.out.println("Validación de esquema: OK (20 tablas, columnas, PK, UNIQUE y FK requeridas).");
+        System.out.println("Validación de esquema: OK (21 tablas, columnas, PK, UNIQUE y FK requeridas).");
     }
 
     private static int expectedSqlType(String table, String column) {
@@ -196,11 +196,14 @@ public final class TestDataLoader {
         if (column.equals("nota")) {
             return Types.DOUBLE;
         }
+        if (column.equals("promedio") || column.equals("umbral")) {
+            return Types.DOUBLE;
+        }
         if (column.equals("fecha_nacimiento") || column.equals("vencimiento")
                 || (column.equals("fecha") && (table.equals("evaluaciones") || table.equals("asistencias")))) {
             return Types.DATE;
         }
-        if (column.equals("actualizado_en") || (column.equals("fecha")
+        if (column.equals("actualizado_en") || column.equals("fecha_generacion") || (column.equals("fecha")
                 && (table.equals("pagos_blenkir") || table.equals("movimientos_caja_blenkir")
                 || table.equals("comunicados_blenkir") || table.equals("auditoria_blenkir")))) {
             return Types.TIMESTAMP;
@@ -748,6 +751,8 @@ public final class TestDataLoader {
         constraints.put("movimientos_caja_blenkir", List.of(Set.of("pago_id")));
         constraints.put("logros_competencias_blenkir",
                 List.of(Set.of("competencia_id", "estudiante_id", "periodo")));
+        constraints.put("alertas_academicas",
+                List.of(Set.of("estudiante_id", "curso_id", "periodo")));
         return constraints;
     }
 
@@ -773,6 +778,8 @@ public final class TestDataLoader {
                 List.of("estudiante_id->estudiantes.id", "concepto_id->conceptos_cobro_blenkir.id"));
         constraints.put("pagos_blenkir", List.of("cuenta_id->cuentas_por_cobrar.id"));
         constraints.put("movimientos_caja_blenkir", List.of("pago_id->pagos_blenkir.id"));
+        constraints.put("alertas_academicas",
+                List.of("estudiante_id->estudiantes.id", "curso_id->cursos.id"));
         return constraints;
     }
 
@@ -871,6 +878,8 @@ public final class TestDataLoader {
         tables.put("movimientos_caja_blenkir", List.of("id", "fecha", "tipo", "concepto", "importe", "usuario", "pago_id"));
         tables.put("comunicados_blenkir", List.of("id", "titulo", "mensaje", "rol_destino", "fecha", "autor"));
         tables.put("auditoria_blenkir", List.of("id", "fecha", "usuario", "accion", "entidad", "referencia"));
+        tables.put("alertas_academicas", List.of("id", "estudiante_id", "curso_id", "periodo", "motivo",
+                "promedio", "umbral", "estado", "fecha_generacion"));
         return Map.copyOf(tables);
     }
 }

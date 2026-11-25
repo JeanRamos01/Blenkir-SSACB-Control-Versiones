@@ -12,13 +12,14 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/academic")
 public class AcademicController {
-    private final EvaluationRepository evaluations; private final GradeRepository grades; private final AttendanceRepository attendances; private final CourseRepository courses; private final StudentRepository students; private final TeacherRepository teachers; private final EnrollmentRepository enrollments;
-    public AcademicController(EvaluationRepository evaluations,GradeRepository grades,AttendanceRepository attendances,CourseRepository courses,StudentRepository students,TeacherRepository teachers,EnrollmentRepository enrollments){this.evaluations=evaluations;this.grades=grades;this.attendances=attendances;this.courses=courses;this.students=students;this.teachers=teachers;this.enrollments=enrollments;}
+    private final EvaluationRepository evaluations; private final GradeRepository grades; private final AttendanceRepository attendances; private final CourseRepository courses; private final StudentRepository students; private final TeacherRepository teachers; private final EnrollmentRepository enrollments; private final AcademicRiskService academicRisk; private final AuditService audit;
+    public AcademicController(EvaluationRepository evaluations,GradeRepository grades,AttendanceRepository attendances,CourseRepository courses,StudentRepository students,TeacherRepository teachers,EnrollmentRepository enrollments,AcademicRiskService academicRisk,AuditService audit){this.evaluations=evaluations;this.grades=grades;this.attendances=attendances;this.courses=courses;this.students=students;this.teachers=teachers;this.enrollments=enrollments;this.academicRisk=academicRisk;this.audit=audit;}
 
     public record EvaluationDto(Long id,Long cursoId,String curso,String nombre,String tipo,LocalDate fecha,Integer peso){}
     public record SaveEvaluation(@NotNull Long cursoId,@NotBlank String nombre,String tipo,@NotNull LocalDate fecha,Integer peso){}
     public record GradeDto(Long id,Long evaluacionId,String evaluacion,Long cursoId,String curso,Long estudianteId,String estudiante,Double nota,String observacion,LocalDate fecha){}
     public record SaveGrade(@NotNull Long evaluacionId,@NotNull Long estudianteId,@NotNull @DecimalMin("0") @DecimalMax("20") Double nota,String observacion){}
+    public record AlertStatus(@NotBlank String estado){}
     public record AttendanceDto(Long id,Long cursoId,String curso,Long estudianteId,String estudiante,LocalDate fecha,String estado,String observacion){}
     public record SaveAttendance(@NotNull Long cursoId,@NotNull Long estudianteId,@NotNull LocalDate fecha,@NotBlank String estado,String observacion){}
 
@@ -62,7 +63,23 @@ public class AcademicController {
                 .orElse(Grade.builder().evaluation(evaluation).student(student).build());
         grade.setNota(x.nota());
         grade.setObservacion(x.observacion());
-        return gradeDto(grades.save(grade));
+        var saved=grades.save(grade);
+        academicRisk.evaluateStudent(student.getId());
+        return gradeDto(saved);
+    }
+
+    @GetMapping("/alerts") @Transactional(readOnly = true) @PreAuthorize("hasAnyRole('ADMINISTRADOR','DOCENTE')")
+    public List<AcademicRiskService.AlertDto> alerts(Authentication auth){
+        if(isRole(auth,"DOCENTE"))return academicRisk.listForTeacher(auth.getName());
+        return academicRisk.listForAdministrator();
+    }
+
+    @PatchMapping("/alerts/{id}/status") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public AcademicRiskService.AlertDto updateAlertStatus(@PathVariable Long id,
+            @Valid @RequestBody AlertStatus request,Authentication auth){
+        var updated=academicRisk.updateStatus(id,request.estado());
+        audit.log(auth.getName(),"ACTUALIZAR_ESTADO","ALERTA_ACADEMICA",id);
+        return updated;
     }
 
     @GetMapping("/attendance") @Transactional(readOnly = true) @PreAuthorize("hasAnyRole('ADMINISTRADOR','DOCENTE')")

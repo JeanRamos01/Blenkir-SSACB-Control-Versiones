@@ -78,7 +78,7 @@ BOOTSTRAP_ADMIN_PASSWORD=<clave_segura_de_al_menos_12_caracteres>
 DEMO_DATA_ENABLED=false
 ```
 
-Durante desarrollo, Hibernate crea/actualiza las tablas con `JPA_DDL_AUTO=update`. La ampliación se describe también en `database/03-modulos-administrativos-blenkir.sql`; úsala para revisar/aplicar los cambios a una base Blenkir que ya tenga el esquema original. Para producción: aplicar migraciones verificadas en copia, usar `validate` y realizar un respaldo previo.
+Hibernate valida el esquema (`ddl-auto: validate`); no ejecuta migraciones automáticamente. La ampliación administrativa existente se describe en `database/03-modulos-administrativos-blenkir.sql`. Las alertas académicas requieren la migración aditiva `database/04-alertas-academicas.sql`, que crea solo una tabla e índices nuevos. Antes de desplegar esta versión, debe aplicarse una vez a cada base conectada a esta versión (incluida la producción existente), porque JPA valida la nueva tabla al arrancar. Para producción, requiere revisión, respaldo y autorización; nunca se ejecuta automáticamente.
 
 ## Frontend Angular
 
@@ -92,17 +92,33 @@ npm start
 
 Abrir `http://localhost:4200`.
 
-## Usuarios iniciales de demostración
+## Credenciales de acceso para pruebas
 
-**Solo si `DEMO_DATA_ENABLED=true`** y la base está vacía se crean estos datos de demostración:
+La inicialización DEMO está desactivada de forma predeterminada y debe usarse únicamente en una base PostgreSQL de pruebas separada. No la habilites en la base con información real. Render debe apuntar el servicio DEMO a su propia base de datos.
 
-- Administrador: `admin / admin123`
-- Docente: `docente / docente123`
-- Estudiante: `alumno / alumno123`
-- Apoderado: `apoderado / apoderado123`
-- Secretaría: `secretaria / secretaria123`
+Configura las variables de entorno en el servicio de pruebas de Render:
 
-También crea un estudiante de prueba con DNI `72123456`, vinculado al apoderado de prueba. **El modo demostración está desactivado de forma predeterminada.** Para comenzar sin datos de prueba, proporciona `BOOTSTRAP_ADMIN_PASSWORD` (mínimo 12 caracteres) con la base vacía. No habilites ambos métodos de inicialización al mismo tiempo.
+```text
+DEMO_DATA_ENABLED=true
+DEMO_ADMIN_PASSWORD=<secreto de al menos 12 caracteres>
+DEMO_SECRETARIA_PASSWORD=<secreto de al menos 12 caracteres>
+DEMO_DOCENTE_PASSWORD=<secreto de al menos 12 caracteres>
+DEMO_ESTUDIANTE_PASSWORD=<secreto de al menos 12 caracteres>
+DEMO_APODERADO_PASSWORD=<secreto de al menos 12 caracteres>
+ACADEMIC_RISK_THRESHOLD=11
+```
+
+Guarda los valores de contraseña únicamente como variables secretas del servicio; no los incluyas en el repositorio ni en logs. Los usuarios DEMO estables son `demo-admin`, `demo-secretaria`, `demo-docente`, `demo-estudiante-riesgo` y `demo-apoderado`. Las contraseñas las define quien administra el entorno DEMO y no se escriben en este README. Al habilitar DEMO, no configures `BOOTSTRAP_ADMIN_PASSWORD`; el administrador DEMO se crea desde `DEMO_ADMIN_PASSWORD`.
+
+En una base vacía se crean esas cinco cuentas, un docente, un estudiante DEMO matriculado en Matemática, dos evaluaciones y calificaciones, asistencia y el vínculo autorizado con su apoderado. El promedio DEMO (9/20) queda por debajo del umbral configurado y genera una alerta. La inicialización es transaccional e idempotente: en reinicios conserva los datos y contraseñas ya creados. Si encuentra cualquier dato previo o una inicialización incompleta, no inserta ni modifica registros.
+
+El umbral se aplica al promedio aritmético de las calificaciones registradas del estudiante por curso y periodo. Se genera una alerta al guardar calificaciones que lo hagan caer por debajo del umbral. Las alertas no se envían por correo; se consultan desde las sesiones autorizadas del administrador/docente, el estudiante afectado y su apoderado vinculado. El esquema actual no mantiene sesiones revocables: después de restablecer una contraseña, los JWT emitidos anteriormente pueden seguir vigentes hasta expirar.
+
+La tabla de alertas debe estar creada antes de desplegar esta versión porque JPA continúa validando el esquema. La migración no se ejecuta al arrancar: aplícala manualmente una sola vez a cada base que usará esta versión; hazlo primero en la base DEMO separada y verifica ahí el arranque. No despliegues la aplicación contra una base sin esa tabla. **No se ha verificado el despliegue real en Render desde este entorno.**
+
+## Restablecimiento de contraseñas
+
+El panel **Usuarios y claves** está disponible solo para ADMINISTRADOR. Permite buscar cuentas y establecer una contraseña nueva (mínimo 12 caracteres); se cifra con BCrypt y la auditoría registra quién hizo el cambio y a qué cuenta, nunca la contraseña. La contraseña nueva se muestra una sola vez en el navegador. Los JWT ya emitidos continúan vigentes hasta expirar; este cambio no modifica el flujo de autenticación ni revoca sesiones existentes.
 
 ## Cómo se conecta PostgreSQL
 
@@ -130,3 +146,10 @@ cd ../frontend && npm ci && npm run build
 ```
 
 El nuevo `.gitignore` excluye dependencias, compilaciones, secretos, volcados de base de datos, exportaciones con datos personales y archivos temporales. Nunca incluyas datos reales de menores en el repositorio.
+
+Rol	Usuario	Variable de Render	Clave temporal
+Administrador	demo-admin	DEMO_ADMIN_PASSWORD	c680691d99d156fc0569774c
+Secretaría	demo-secretaria	DEMO_SECRETARIA_PASSWORD	55926959078a9ca06269ccde
+Docente	demo-docente	DEMO_DOCENTE_PASSWORD	bdfee9ae3f88ea0f7f5f333e
+Estudiante	demo-estudiante-riesgo	DEMO_ESTUDIANTE_PASSWORD	03bdd6e47b7a1f92ed78b874
+Apoderado	demo-apoderado	DEMO_APODERADO_PASSWORD	370195963856e288443c2c27

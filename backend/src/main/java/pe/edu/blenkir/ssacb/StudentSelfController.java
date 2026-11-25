@@ -10,8 +10,8 @@ import java.util.*;
 @RequestMapping("/api/student/me")
 @PreAuthorize("hasRole('ESTUDIANTE')")
 public class StudentSelfController {
-    private final StudentRepository students; private final EnrollmentRepository enrollments; private final GradeRepository grades; private final AttendanceRepository attendances;
-    public StudentSelfController(StudentRepository students,EnrollmentRepository enrollments,GradeRepository grades,AttendanceRepository attendances){this.students=students;this.enrollments=enrollments;this.grades=grades;this.attendances=attendances;}
+    private final StudentRepository students; private final EnrollmentRepository enrollments; private final GradeRepository grades; private final AttendanceRepository attendances; private final AcademicRiskService academicRisk;
+    public StudentSelfController(StudentRepository students,EnrollmentRepository enrollments,GradeRepository grades,AttendanceRepository attendances,AcademicRiskService academicRisk){this.students=students;this.enrollments=enrollments;this.grades=grades;this.attendances=attendances;this.academicRisk=academicRisk;}
 
     @GetMapping("/summary") @Transactional(readOnly = true)
     public Map<String,Object> summary(Authentication a){
@@ -25,6 +25,7 @@ public class StudentSelfController {
                 .map(AcademicController::gradeDto).toList());
         out.put("attendance",attendances.findByStudent_IdOrderByFechaDesc(student.getId()).stream()
                 .map(AcademicController::attendanceDto).toList());
+        out.put("alerts",academicRisk.listForStudent(student.getId()));
         return out;
     }
 }

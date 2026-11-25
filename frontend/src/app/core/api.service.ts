@@ -65,6 +65,10 @@ export class ApiService{
   updateNotification(id:number,x:any){return this.http.put<any>(`${this.base}/notifications/${id}`,x);}
   deleteNotification(id:number){return this.http.delete(`${this.base}/notifications/${id}`);}
   audit(){return this.http.get<any[]>(`${this.base}/audit`);}
+  academicAlerts(){return this.http.get<any[]>(`${this.base}/academic/alerts`);}
+  updateAcademicAlertStatus(id:number,estado:string){return this.http.patch<any>(`${this.base}/academic/alerts/${id}/status`,{estado});}
+  adminUsers(q=''){let p=new HttpParams();if(q.trim())p=p.set('q',q.trim());return this.http.get<any[]>(`${this.base}/admin/users`,{params:p});}
+  resetUserPassword(id:number,password:string){return this.http.patch<any>(`${this.base}/admin/users/${id}/password`,{password});}
   competencies(){return this.http.get<any[]>(`${this.base}/competencies`);}
   createCompetency(x:any){return this.http.post<any>(`${this.base}/competencies`,x);}
   competencyResults(){return this.http.get<any[]>(`${this.base}/competencies/results`);}
