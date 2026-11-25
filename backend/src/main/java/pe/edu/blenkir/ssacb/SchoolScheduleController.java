@@ -64,6 +64,27 @@ public class SchoolScheduleController {
         audit.log(auth.getName(),"CREAR","HORARIO",item.getId());return dto(item);
     }
 
+    @PutMapping("/{id}") @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
+    public ScheduleDto update(@PathVariable Long id,@Valid @RequestBody ScheduleRequest r,Authentication auth){
+        if(!r.horaInicio().isBefore(r.horaFin()))throw new IllegalArgumentException("Hora final debe ser posterior a la inicial");
+        var schedule=schedules.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Horario no encontrado"));
+        var course=courses.findById(Objects.requireNonNull(r.cursoId()))
+                .orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
+        for(var other:schedules.findAllByOrderByDiaSemanaAscHoraInicioAsc()){
+            if(Objects.equals(other.getId(),id)||!other.getDiaSemana().equals(r.diaSemana())||
+               !(r.horaInicio().isBefore(other.getHoraFin())&&other.getHoraInicio().isBefore(r.horaFin())))continue;
+            var existing=other.getCourse();
+            boolean sameSection=Objects.equals(existing.getGrado(),course.getGrado())&&Objects.equals(existing.getSeccion(),course.getSeccion());
+            boolean sameTeacher=course.getTeacher()!=null&&existing.getTeacher()!=null&&Objects.equals(course.getTeacher().getId(),existing.getTeacher().getId());
+            boolean sameRoom=r.aula()!=null&&!r.aula().isBlank()&&r.aula().equalsIgnoreCase(other.getAula());
+            if(sameSection||sameTeacher||sameRoom)throw new IllegalArgumentException("Cruce de horario en sección, docente o aula");
+        }
+        schedule.setCourse(course);schedule.setDiaSemana(r.diaSemana());schedule.setHoraInicio(r.horaInicio());
+        schedule.setHoraFin(r.horaFin());schedule.setAula(r.aula());
+        var item=schedules.save(schedule);audit.log(auth.getName(),"ACTUALIZAR","HORARIO",id);return dto(item);
+    }
+
     @DeleteMapping("/{id}") @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
     public void delete(@PathVariable Long id,Authentication auth){
         Long scheduleId=Objects.requireNonNull(id);

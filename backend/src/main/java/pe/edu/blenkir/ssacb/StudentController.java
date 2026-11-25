@@ -50,6 +50,8 @@ public class StudentController {
     @PostMapping @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
     public StudentDto create(@Valid @RequestBody SaveStudent x){
         String dni = dniUniquenessService.validateAndEnsureAvailable(x.dni());
+        if(students.findAll().stream().anyMatch(s->s.getCodigo().equalsIgnoreCase(x.codigo().trim())))
+            throw new IllegalArgumentException("El código de estudiante ya existe");
         UserAccount user=null;
         if(x.username()!=null && !x.username().isBlank()){
             if(users.findByUsername(x.username()).isPresent()) throw new IllegalArgumentException("El usuario ya existe");
@@ -69,7 +71,9 @@ public class StudentController {
         var s=students.findById(Objects.requireNonNull(id))
                 .orElseThrow(()->new IllegalArgumentException("Estudiante no encontrado"));
         String dni = dniUniquenessService.validateAndEnsureAvailable(x.dni(), s.getId(), null, null);
-        s.setCodigo(x.codigo());s.setDni(dni);s.setNombres(x.nombres());s.setApellidos(x.apellidos());s.setFechaNacimiento(x.fechaNacimiento());s.setGrado(x.grado());s.setSeccion(x.seccion());s.setEmail(x.email());s.setDireccion(x.direccion());s.setTelefono(x.telefono());
+        if(students.findAll().stream().anyMatch(other->!Objects.equals(other.getId(),id)&&other.getCodigo().equalsIgnoreCase(x.codigo().trim())))
+            throw new IllegalArgumentException("El código de estudiante ya existe");
+        s.setCodigo(x.codigo().trim());s.setDni(dni);s.setNombres(x.nombres());s.setApellidos(x.apellidos());s.setFechaNacimiento(x.fechaNacimiento());s.setGrado(x.grado());s.setSeccion(x.seccion());s.setEmail(x.email());s.setDireccion(x.direccion());s.setTelefono(x.telefono());
         return dto(students.save(s));
     }
 

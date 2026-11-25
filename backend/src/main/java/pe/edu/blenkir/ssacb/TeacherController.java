@@ -30,6 +30,8 @@ public class TeacherController {
     @GetMapping @PreAuthorize("hasRole('ADMINISTRADOR')") public List<TeacherDto> all(){return teachers.findAll().stream().map(TeacherController::dto).toList();}
     @PostMapping @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')") public TeacherDto create(@Valid @RequestBody SaveTeacher x){
         String dni = dniUniquenessService.validateAndEnsureAvailable(x.dni());
+        if(teachers.findAll().stream().anyMatch(t->t.getCodigo().equalsIgnoreCase(x.codigo().trim())))
+            throw new IllegalArgumentException("El código de docente ya existe");
         UserAccount user=null;
         if(x.username()!=null&&!x.username().isBlank()){
             if(users.findByUsername(x.username()).isPresent())throw new IllegalArgumentException("El usuario ya existe");
@@ -40,6 +42,26 @@ public class TeacherController {
         }
         var teacher=Objects.requireNonNull(Teacher.builder().codigo(x.codigo()).dni(dni).nombres(x.nombres())
                 .apellidos(x.apellidos()).email(x.email()).especialidad(x.especialidad()).user(user).build());
+        return dto(teachers.save(teacher));
+    }
+
+    @PutMapping("/{id}") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public TeacherDto update(@PathVariable Long id,@Valid @RequestBody SaveTeacher x){
+        var teacher=teachers.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Docente no encontrado"));
+        String dni=dniUniquenessService.validateAndEnsureAvailable(x.dni(),null,teacher.getId(),null);
+        if(teachers.findAll().stream().anyMatch(t->!Objects.equals(t.getId(),id)&&t.getCodigo().equalsIgnoreCase(x.codigo().trim())))
+            throw new IllegalArgumentException("El código de docente ya existe");
+        teacher.setCodigo(x.codigo().trim());teacher.setDni(dni);teacher.setNombres(x.nombres());
+        teacher.setApellidos(x.apellidos());teacher.setEmail(x.email());teacher.setEspecialidad(x.especialidad());
+        return dto(teachers.save(teacher));
+    }
+
+    @PatchMapping("/{id}/status") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public TeacherDto status(@PathVariable Long id,@RequestParam boolean active){
+        var teacher=teachers.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Docente no encontrado"));
+        teacher.setActivo(active);
         return dto(teachers.save(teacher));
     }
 }

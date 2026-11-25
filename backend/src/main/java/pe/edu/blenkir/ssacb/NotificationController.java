@@ -34,4 +34,21 @@ public class NotificationController {
         var n=notifications.save(notification);
         audit.log(auth.getName(),"CREAR","COMUNICADO",n.getId());return dto(n);
     }
+
+    @PutMapping("/{id}") @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
+    public NotificationDto update(@PathVariable Long id,@Valid @RequestBody SaveNotification r,Authentication auth){
+        var notification=notifications.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Comunicado no encontrado"));
+        if(!r.rolDestino().equals("TODOS")&&Arrays.stream(Role.values()).noneMatch(role->role.name().equals(r.rolDestino())))
+            throw new IllegalArgumentException("Destinatario inválido");
+        notification.setTitulo(r.titulo());notification.setMensaje(r.mensaje());notification.setRolDestino(r.rolDestino());
+        var saved=notifications.save(notification);audit.log(auth.getName(),"ACTUALIZAR","COMUNICADO",id);return dto(saved);
+    }
+
+    @DeleteMapping("/{id}") @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
+    public void delete(@PathVariable Long id,Authentication auth){
+        if(!notifications.existsById(Objects.requireNonNull(id)))
+            throw new IllegalArgumentException("Comunicado no encontrado");
+        notifications.deleteById(id);audit.log(auth.getName(),"ELIMINAR","COMUNICADO",id);
+    }
 }

@@ -26,11 +26,34 @@ public class CourseController {
 
     @PostMapping @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
     public CourseDto create(@Valid @RequestBody SaveCourse x){
+        if(courses.findAll().stream().anyMatch(c->c.getCodigo().equalsIgnoreCase(x.codigo().trim())))
+            throw new IllegalArgumentException("El código de curso ya existe");
         Long teacherId=x.docenteId();
         var teacher=teacherId==null?null:teachers.findById(Objects.requireNonNull(teacherId))
                 .orElseThrow(()->new IllegalArgumentException("Docente no encontrado"));
         var course=Objects.requireNonNull(Course.builder().codigo(x.codigo()).nombre(x.nombre())
                 .grado(x.grado()).seccion(x.seccion()).periodo(x.periodo()).teacher(teacher).build());
+        return dto(courses.save(course));
+    }
+
+    @PutMapping("/{id}") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public CourseDto update(@PathVariable Long id,@Valid @RequestBody SaveCourse x){
+        var course=courses.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
+        if(courses.findAll().stream().anyMatch(c->!Objects.equals(c.getId(),id)&&c.getCodigo().equalsIgnoreCase(x.codigo().trim())))
+            throw new IllegalArgumentException("El código de curso ya existe");
+        var teacher=x.docenteId()==null?null:teachers.findById(Objects.requireNonNull(x.docenteId()))
+                .orElseThrow(()->new IllegalArgumentException("Docente no encontrado"));
+        course.setCodigo(x.codigo().trim());course.setNombre(x.nombre());course.setGrado(x.grado());
+        course.setSeccion(x.seccion());course.setPeriodo(x.periodo());course.setTeacher(teacher);
+        return dto(courses.save(course));
+    }
+
+    @PatchMapping("/{id}/status") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public CourseDto status(@PathVariable Long id,@RequestParam boolean active){
+        var course=courses.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Curso no encontrado"));
+        course.setActivo(active);
         return dto(courses.save(course));
     }
 

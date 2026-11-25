@@ -27,6 +27,8 @@ public class StaffController {
 
     @PostMapping @Transactional
     public StaffDto create(@Valid @RequestBody StaffRequest r,Authentication a){
+        if(staff.findAll().stream().anyMatch(s->s.getDni().equals(r.dni())))
+            throw new IllegalArgumentException("El DNI ya está registrado en personal");
         var newStaff=Objects.requireNonNull(SchoolStaff.builder().dni(r.dni()).nombreCompleto(r.nombreCompleto())
            .cargo(r.cargo()).correo(r.correo()).telefono(r.telefono()).activo(true).build());
         var s=staff.save(newStaff);
@@ -37,8 +39,19 @@ public class StaffController {
     public StaffDto update(@PathVariable Long id,@Valid @RequestBody StaffRequest r,Authentication a){
         var s=staff.findById(Objects.requireNonNull(id))
                 .orElseThrow(()->new IllegalArgumentException("Personal no encontrado"));
+        if(staff.findAll().stream().anyMatch(other->!Objects.equals(other.getId(),id)&&other.getDni().equals(r.dni())))
+            throw new IllegalArgumentException("El DNI ya está registrado en personal");
         s.setDni(r.dni());s.setNombreCompleto(r.nombreCompleto());s.setCargo(r.cargo());
         s.setCorreo(r.correo());s.setTelefono(r.telefono());s.setActivo(r.activo());
         audit.log(a.getName(),"ACTUALIZAR","PERSONAL",id);return dto(staff.save(s));
+    }
+
+    @PatchMapping("/{id}/status") @Transactional
+    public StaffDto status(@PathVariable Long id,@RequestParam boolean active,Authentication a){
+        var s=staff.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Personal no encontrado"));
+        s.setActivo(active);
+        audit.log(a.getName(),active?"ACTIVAR":"DESACTIVAR","PERSONAL",id);
+        return dto(staff.save(s));
     }
 }

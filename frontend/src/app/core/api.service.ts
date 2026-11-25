@@ -9,10 +9,16 @@ export class ApiService{
 }
   students(){return this.http.get<any[]>(`${this.base}/students`);}
   addStudent(x:any){return this.http.post(`${this.base}/students`,x);}
+  updateStudent(id:number,x:any){return this.http.put<any>(`${this.base}/students/${id}`,x);}
+  studentStatus(id:number,active:boolean){return this.http.patch<any>(`${this.base}/students/${id}/status`,{}, {params:{active}});}
   teachers(){return this.http.get<any[]>(`${this.base}/teachers`);}
   addTeacher(x:any){return this.http.post(`${this.base}/teachers`,x);}
+  updateTeacher(id:number,x:any){return this.http.put<any>(`${this.base}/teachers/${id}`,x);}
+  teacherStatus(id:number,active:boolean){return this.http.patch<any>(`${this.base}/teachers/${id}/status`,{}, {params:{active}});}
   courses(){return this.http.get<any[]>(`${this.base}/courses`);}
   addCourse(x:any){return this.http.post(`${this.base}/courses`,x);}
+  updateCourse(id:number,x:any){return this.http.put<any>(`${this.base}/courses/${id}`,x);}
+  courseStatus(id:number,active:boolean){return this.http.patch<any>(`${this.base}/courses/${id}/status`,{}, {params:{active}});}
   courseStudents(id:number){return this.http.get<any[]>(`${this.base}/courses/${id}/students`);}
   enroll(courseId:number,studentId:number){return this.http.post(`${this.base}/courses/${courseId}/enroll/${studentId}`,{});}
   evaluations(courseId?:number){let p=new HttpParams(); if(courseId)p=p.set('courseId',courseId);return this.http.get<any[]>(`${this.base}/academic/evaluations`,{params:p});}
@@ -23,6 +29,8 @@ export class ApiService{
   saveAttendance(x:any){return this.http.post(`${this.base}/academic/attendance`,x);}
   guardians(){return this.http.get<any[]>(`${this.base}/guardians`);}
   addGuardian(x:any){return this.http.post(`${this.base}/guardians`,x);}
+  updateGuardian(id:number,x:any){return this.http.put<any>(`${this.base}/guardians/${id}`,x);}
+  guardianStatus(id:number,active:boolean){return this.http.patch<any>(`${this.base}/guardians/${id}/status`,{}, {params:{active}});}
   linkGuardian(guardianId:number,studentId:number,parentesco:string){return this.http.post(`${this.base}/guardians/${guardianId}/link/${studentId}`,{}, {params:{parentesco}});}
   myChildren(){return this.http.get<any[]>(`${this.base}/guardians/me/children`);}
   childSummary(dni:string){return this.http.get<any>(`${this.base}/guardians/me/children/dni/${dni}/summary`);}
@@ -34,14 +42,18 @@ export class ApiService{
   assignTeacher(cursoId:number,docenteId:number|null){return this.http.put<any>(`${this.base}/curriculum/assignment`,{cursoId,docenteId});}
   schedules(){return this.http.get<any[]>(`${this.base}/schedules`);}
   addSchedule(x:any){return this.http.post<any>(`${this.base}/schedules`,x);}
+  updateSchedule(id:number,x:any){return this.http.put<any>(`${this.base}/schedules/${id}`,x);}
   deleteSchedule(id:number){return this.http.delete(`${this.base}/schedules/${id}`);}
   staff(){return this.http.get<any[]>(`${this.base}/staff`);}
   saveStaff(x:any){return x.id?this.http.put<any>(`${this.base}/staff/${x.id}`,x):this.http.post<any>(`${this.base}/staff`,x);}
+  staffStatus(id:number,active:boolean){return this.http.patch<any>(`${this.base}/staff/${id}/status`,{}, {params:{active}});}
   secretariatUsers(){return this.http.get<any[]>(`${this.base}/secretariat-users`);}
   createSecretariatUser(x:any){return this.http.post<any>(`${this.base}/secretariat-users`,x);}
   secretariatStatus(id:number,active:boolean){return this.http.patch<any>(`${this.base}/secretariat-users/${id}/status`,{},{params:{active}});}
   concepts(){return this.http.get<any[]>(`${this.base}/finance/concepts`);}
   createConcept(x:any){return this.http.post<any>(`${this.base}/finance/concepts`,x);}
+  updateConcept(id:number,x:any){return this.http.put<any>(`${this.base}/finance/concepts/${id}`,x);}
+  conceptStatus(id:number,active:boolean){return this.http.patch<any>(`${this.base}/finance/concepts/${id}/status`,{}, {params:{active}});}
   charges(){return this.http.get<any[]>(`${this.base}/finance/charges`);}
   createCharge(x:any){return this.http.post<any>(`${this.base}/finance/charges`,x);}
   payments(){return this.http.get<any[]>(`${this.base}/finance/payments`);}
@@ -50,6 +62,8 @@ export class ApiService{
   manualCash(x:any){return this.http.post<any>(`${this.base}/finance/cash`,x);}
   notifications(){return this.http.get<any[]>(`${this.base}/notifications`);}
   postNotification(x:any){return this.http.post<any>(`${this.base}/notifications`,x);}
+  updateNotification(id:number,x:any){return this.http.put<any>(`${this.base}/notifications/${id}`,x);}
+  deleteNotification(id:number){return this.http.delete(`${this.base}/notifications/${id}`);}
   audit(){return this.http.get<any[]>(`${this.base}/audit`);}
   competencies(){return this.http.get<any[]>(`${this.base}/competencies`);}
   createCompetency(x:any){return this.http.post<any>(`${this.base}/competencies`,x);}

@@ -46,9 +46,30 @@ public class FinanceController {
 
     @PostMapping("/concepts") @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
     public ConceptDto createConcept(@Valid @RequestBody ConceptInput r,Authentication auth){
+        if(concepts.findAll().stream().anyMatch(c->c.getNombre().equalsIgnoreCase(r.nombre().trim())))
+            throw new IllegalArgumentException("Ya existe un concepto con ese nombre");
         var c=concepts.save(Objects.requireNonNull(
                 PaymentConcept.builder().nombre(r.nombre().trim()).importe(r.importe()).build()));
         audit.log(auth.getName(),"CREAR","CONCEPTO_COBRO",c.getId());return dto(c);
+    }
+
+    @PutMapping("/concepts/{id}") @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
+    public ConceptDto updateConcept(@PathVariable Long id,@Valid @RequestBody ConceptInput r,Authentication auth){
+        var concept=concepts.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Concepto no encontrado"));
+        if(concepts.findAll().stream().anyMatch(c->!Objects.equals(c.getId(),id)&&c.getNombre().equalsIgnoreCase(r.nombre().trim())))
+            throw new IllegalArgumentException("Ya existe un concepto con ese nombre");
+        concept.setNombre(r.nombre().trim());concept.setImporte(r.importe());
+        audit.log(auth.getName(),"ACTUALIZAR","CONCEPTO_COBRO",id);
+        return dto(concepts.save(concept));
+    }
+
+    @PatchMapping("/concepts/{id}/status") @PreAuthorize("hasRole('ADMINISTRADOR')") @Transactional
+    public ConceptDto conceptStatus(@PathVariable Long id,@RequestParam boolean active,Authentication auth){
+        var concept=concepts.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Concepto no encontrado"));
+        concept.setActivo(active);audit.log(auth.getName(),active?"ACTIVAR":"DESACTIVAR","CONCEPTO_COBRO",id);
+        return dto(concepts.save(concept));
     }
 
     @GetMapping("/charges") @Transactional(readOnly=true)
@@ -61,6 +82,9 @@ public class FinanceController {
         var c=concepts.findById(Objects.requireNonNull(r.conceptoId()))
                 .orElseThrow(()->new IllegalArgumentException("Concepto no encontrado"));
         if(!s.isActivo()||!c.isActivo())throw new IllegalArgumentException("Estudiante o concepto inactivo");
+        if(charges.findAll().stream().anyMatch(x->Objects.equals(x.getStudent().getId(),r.estudianteId())
+                &&Objects.equals(x.getConcept().getId(),r.conceptoId())&&x.getPeriodo().equals(r.periodo())))
+            throw new IllegalArgumentException("Ya existe una cuenta para este estudiante, concepto y periodo");
         var charge=charges.save(Objects.requireNonNull(StudentCharge.builder().student(s).concept(c)
             .importe(c.getImporte()).pagado(BigDecimal.ZERO).periodo(r.periodo())
             .vencimiento(r.vencimiento()).build()));

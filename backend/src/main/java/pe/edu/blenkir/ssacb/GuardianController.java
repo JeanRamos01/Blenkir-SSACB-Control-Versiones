@@ -18,6 +18,7 @@ public class GuardianController {
 
     public record GuardianDto(Long id,String dni,String nombres,String apellidos,String telefono,String email,boolean activo){}
     public record SaveGuardian(@NotBlank @Pattern(regexp = "^\\d{8}$", message = "El DNI debe tener exactamente 8 dígitos numéricos.") String dni,@NotBlank String nombres,@NotBlank String apellidos,String telefono,String email,@NotBlank String username,String password){}
+    public record UpdateGuardian(@NotBlank @Pattern(regexp = "^\\d{8}$", message = "El DNI debe tener exactamente 8 dígitos numéricos.") String dni,@NotBlank String nombres,@NotBlank String apellidos,String telefono,String email){}
     public record ChildDto(Long id,String codigo,String dni,String nombres,String apellidos,String grado,String seccion,String parentesco){}
     static GuardianDto dto(Guardian g){return new GuardianDto(g.getId(),g.getDni(),g.getNombres(),g.getApellidos(),g.getTelefono(),g.getEmail(),g.isActivo());}
     static ChildDto child(GuardianStudent l){var s=l.getStudent();return new ChildDto(s.getId(),s.getCodigo(),s.getDni(),s.getNombres(),s.getApellidos(),s.getGrado(),s.getSeccion(),l.getParentesco());}
@@ -35,12 +36,39 @@ public class GuardianController {
         return dto(guardians.save(guardian));
     }
 
+    @PutMapping("/{id}") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public GuardianDto update(@PathVariable Long id,@Valid @RequestBody UpdateGuardian x){
+        var guardian=guardians.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Apoderado no encontrado"));
+        String dni=dniUniquenessService.validateAndEnsureAvailable(x.dni(),null,null,guardian.getId());
+        guardian.setDni(dni);guardian.setNombres(x.nombres());guardian.setApellidos(x.apellidos());
+        guardian.setTelefono(x.telefono());guardian.setEmail(x.email());
+        return dto(guardians.save(guardian));
+    }
+
+    @PatchMapping("/{id}/status") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public GuardianDto status(@PathVariable Long id,@RequestParam boolean active){
+        var guardian=guardians.findById(Objects.requireNonNull(id))
+                .orElseThrow(()->new IllegalArgumentException("Apoderado no encontrado"));
+        guardian.setActivo(active);
+        return dto(guardians.save(guardian));
+    }
+
     @PostMapping("/{guardianId}/link/{studentId}") @Transactional @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ChildDto link(@PathVariable Long guardianId,@PathVariable Long studentId,@RequestParam(defaultValue="Apoderado") String parentesco){
         var guardian=guardians.findById(Objects.requireNonNull(guardianId)).orElseThrow();
         var student=students.findById(Objects.requireNonNull(studentId)).orElseThrow();
         var existing=links.findByGuardian_IdAndStudent_IdAndAutorizadoTrue(guardianId,studentId);
-        if(existing.isPresent())return child(existing.get());
+        if(existing.isPresent()){
+            existing.get().setParentesco(parentesco);
+            return child(links.save(existing.get()));
+        }
+        var inactive=links.findByGuardian_IdAndStudent_Id(guardianId,studentId);
+        if(inactive.isPresent()){
+            var link=inactive.get();
+            link.setAutorizado(true);link.setParentesco(parentesco);
+            return child(links.save(link));
+        }
         var link=Objects.requireNonNull(GuardianStudent.builder().guardian(guardian).student(student)
                 .parentesco(parentesco).build());
         return child(links.save(link));
